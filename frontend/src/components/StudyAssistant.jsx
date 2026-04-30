@@ -1,11 +1,10 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Plus,
   Sparkles,
   Upload,
   ArrowUp,
   FileText,
-  BookOpen,
   Check,
   X,
   Lightbulb,
@@ -17,7 +16,15 @@ import {
   PanelLeftOpen,
   Trash2,
   Zap,
-  GraduationCap,
+  ListChecks,
+  MessageCircle,
+  ChevronDown,
+  Bot,
+  User,
+  Copy,
+  RefreshCw,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
 
 /**
@@ -30,6 +37,8 @@ import {
  *   explanation: string;
  * }
  */
+
+/* ---------------- Dummy Data ---------------- */
 
 const DUMMY_QUIZ = [
   {
@@ -73,27 +82,297 @@ const DUMMY_QUIZ = [
   },
 ];
 
-const DUMMY_RECENT = [
-  { id: "1", title: "Data Structures — Stacks & Queues", date: "Today" },
-  { id: "2", title: "React Hooks Deep Dive", date: "Today" },
-  { id: "3", title: "Binary Search Algorithms", date: "Yesterday" },
-  { id: "4", title: "Organic Chemistry — Alkanes", date: "Yesterday" },
-  { id: "5", title: "World War II Key Events", date: "2 days ago" },
-  { id: "6", title: "Python List Comprehensions", date: "3 days ago" },
-  { id: "7", title: "Linear Algebra — Eigenvectors", date: "5 days ago" },
-  { id: "8", title: "Photosynthesis Fundamentals", date: "1 week ago" },
+const DUMMY_RECENT_CHATS = [
+  { id: "c1", title: "Explain neural network backpropagation", date: "Today" },
+  { id: "c2", title: "Brainstorm startup ideas for students", date: "Today" },
+  { id: "c3", title: "Debug my Python recursion function", date: "Yesterday" },
+  { id: "c4", title: "Summarize The Great Gatsby", date: "Yesterday" },
+  { id: "c5", title: "Essay outline on climate policy", date: "2 days ago" },
+  { id: "c6", title: "Calculus integration techniques", date: "4 days ago" },
+];
+
+const DUMMY_RECENT_MCQ = [
+  { id: "m1", title: "Data Structures — Stacks & Queues", date: "Today" },
+  { id: "m2", title: "React Hooks Deep Dive", date: "Today" },
+  { id: "m3", title: "Binary Search Algorithms", date: "Yesterday" },
+  { id: "m4", title: "Organic Chemistry — Alkanes", date: "Yesterday" },
+  { id: "m5", title: "World War II Key Events", date: "2 days ago" },
+  { id: "m6", title: "Photosynthesis Fundamentals", date: "1 week ago" },
+];
+
+/* ---------------- AI Models ---------------- */
+
+const PROVIDER_STYLES = {
+  Google: "bg-blue-100 text-blue-700 ring-blue-200",
+  Anthropic: "bg-orange-100 text-orange-700 ring-orange-200",
+  OpenAI: "bg-emerald-100 text-emerald-700 ring-emerald-200",
+  Kimi: "bg-purple-100 text-purple-700 ring-purple-200",
+};
+
+const MODELS = [
+  {
+    id: "gemini-3.1-pro",
+    name: "Gemini 3.1 Pro",
+    provider: "Google",
+    description: "Most capable multimodal reasoning",
+    badge: "NEW",
+  },
+  {
+    id: "gemini-2.5-flash",
+    name: "Gemini 2.5 Flash",
+    provider: "Google",
+    description: "Fast, efficient for everyday tasks",
+  },
+  {
+    id: "claude-sonnet-4.6",
+    name: "Claude Sonnet 4.6",
+    provider: "Anthropic",
+    description: "Balanced intelligence & speed",
+    badge: "NEW",
+  },
+  {
+    id: "claude-opus-4.5",
+    name: "Claude Opus 4.5",
+    provider: "Anthropic",
+    description: "Deep reasoning for complex work",
+  },
+  {
+    id: "gpt-5.2",
+    name: "GPT-5.2",
+    provider: "OpenAI",
+    description: "Frontier general-purpose model",
+  },
+  {
+    id: "gpt-5-mini",
+    name: "GPT-5 mini",
+    provider: "OpenAI",
+    description: "Cost-efficient & quick",
+  },
+  {
+    id: "kimi-k2",
+    name: "Kimi K2",
+    provider: "Kimi",
+    description: "Long-context Chinese & English",
+  },
+  {
+    id: "kimi-k1.5",
+    name: "Kimi K1.5",
+    provider: "Kimi",
+    description: "Fast responses, broad knowledge",
+  },
 ];
 
 function cn(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
+/* ---------------- Model Switcher ---------------- */
+const ModelSwitcher = ({ value, onChange }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const current = MODELS.find((m) => m.id === value) || MODELS[0];
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const grouped = MODELS.reduce((acc, m) => {
+    acc[m.provider] = acc[m.provider] || [];
+    acc[m.provider].push(m);
+    return acc;
+  }, {});
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        data-testid="model-switcher"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-[13px] font-medium text-zinc-800 transition hover:border-zinc-400 hover:bg-zinc-50"
+      >
+        <span
+          className={cn(
+            "flex h-4 w-4 items-center justify-center rounded-sm text-[9px] font-bold ring-1",
+            PROVIDER_STYLES[current.provider]
+          )}
+        >
+          {current.provider[0]}
+        </span>
+        <span className="max-w-[160px] truncate">{current.name}</span>
+        <ChevronDown
+          className={cn(
+            "h-[14px] w-[14px] text-zinc-500 transition-transform",
+            open && "rotate-180"
+          )}
+        />
+      </button>
+
+      {open && (
+        <div
+          data-testid="model-dropdown"
+          className="absolute bottom-full left-0 z-50 mb-2 w-[340px] origin-bottom-left rounded-xl border border-zinc-200 bg-white p-1.5 shadow-[0_12px_40px_rgba(17,24,39,0.12)]"
+        >
+          <div className="max-h-[360px] overflow-y-auto [scrollbar-width:thin]">
+            {Object.entries(grouped).map(([provider, items]) => (
+              <div key={provider} className="mb-1 last:mb-0">
+                <div className="flex items-center gap-2 px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+                  <span
+                    className={cn(
+                      "flex h-3.5 w-3.5 items-center justify-center rounded-sm text-[8px] font-bold ring-1",
+                      PROVIDER_STYLES[provider]
+                    )}
+                  >
+                    {provider[0]}
+                  </span>
+                  {provider}
+                </div>
+                {items.map((m) => {
+                  const active = m.id === value;
+                  return (
+                    <button
+                      key={m.id}
+                      data-testid={`model-option-${m.id}`}
+                      onClick={() => {
+                        onChange(m.id);
+                        setOpen(false);
+                      }}
+                      className={cn(
+                        "flex w-full items-start gap-2.5 rounded-lg px-3 py-2 text-left transition-colors",
+                        active
+                          ? "bg-black text-white"
+                          : "text-zinc-800 hover:bg-zinc-100"
+                      )}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate text-[13px] font-semibold">
+                            {m.name}
+                          </span>
+                          {m.badge && (
+                            <span
+                              className={cn(
+                                "rounded px-1.5 py-0.5 text-[9px] font-bold tracking-wide",
+                                active
+                                  ? "bg-white/20 text-white"
+                                  : "bg-amber-100 text-amber-700"
+                              )}
+                            >
+                              {m.badge}
+                            </span>
+                          )}
+                        </div>
+                        <div
+                          className={cn(
+                            "mt-0.5 truncate text-[11.5px]",
+                            active ? "text-white/75" : "text-zinc-500"
+                          )}
+                        >
+                          {m.description}
+                        </div>
+                      </div>
+                      {active && (
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-white" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 /* ---------------- Sidebar ---------------- */
-const Sidebar = ({ open, onToggle, activeId, onSelect, onNewQuiz }) => {
+const SectionTabs = ({ section, onChange, open }) => {
+  const tabs = [
+    { id: "chat", label: "Chat", Icon: MessageCircle },
+    { id: "mcq", label: "MCQ", Icon: ListChecks },
+  ];
+
+  if (!open) {
+    // icon-only vertical stack when collapsed
+    return (
+      <div className="flex flex-col items-center gap-1.5 px-2">
+        {tabs.map((t) => {
+          const active = section === t.id;
+          const Icon = t.Icon;
+          return (
+            <button
+              key={t.id}
+              data-testid={`tab-${t.id}-collapsed`}
+              onClick={() => onChange(t.id)}
+              className={cn(
+                "flex h-9 w-9 items-center justify-center rounded-lg transition",
+                active
+                  ? "bg-black text-white"
+                  : "text-zinc-500 hover:bg-black/5 hover:text-black"
+              )}
+              title={t.label}
+            >
+              <Icon className="h-[17px] w-[17px]" />
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-3">
+      <div className="relative flex items-center rounded-xl border border-zinc-200 bg-white p-1">
+        {/* sliding highlight */}
+        <div
+          className={cn(
+            "absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg bg-black transition-all duration-300 ease-out",
+            section === "chat" ? "left-1" : "left-[calc(50%+0px)]"
+          )}
+        />
+        {tabs.map((t) => {
+          const active = section === t.id;
+          const Icon = t.Icon;
+          return (
+            <button
+              key={t.id}
+              data-testid={`tab-${t.id}`}
+              onClick={() => onChange(t.id)}
+              className={cn(
+                "relative z-10 flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-[12.5px] font-semibold transition-colors duration-200",
+                active ? "text-white" : "text-zinc-600 hover:text-black"
+              )}
+            >
+              <Icon className="h-[14px] w-[14px]" />
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+const Sidebar = ({
+  open,
+  onToggle,
+  section,
+  onSectionChange,
+  activeId,
+  onSelect,
+  onNew,
+}) => {
   const [query, setQuery] = useState("");
-  const filtered = DUMMY_RECENT.filter((r) =>
+  const pool = section === "chat" ? DUMMY_RECENT_CHATS : DUMMY_RECENT_MCQ;
+  const filtered = pool.filter((r) =>
     r.title.toLowerCase().includes(query.toLowerCase())
   );
+
+  const newLabel = section === "chat" ? "New Chat" : "New Quiz";
+  const recentLabel = section === "chat" ? "Recent Chats" : "Recent Quizzes";
 
   return (
     <aside
@@ -115,18 +394,13 @@ const Sidebar = ({ open, onToggle, activeId, onSelect, onNewQuiz }) => {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-zinc-300/60 to-transparent" />
 
       <div className="relative flex h-full flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 pt-5 pb-4">
-          <div className="flex items-center gap-2 overflow-hidden">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-black shadow-lg shadow-black/20">
-              <GraduationCap className="h-4 w-4 text-white" />
-            </div>
-            {open && (
-              <span className="truncate text-[15px] font-semibold tracking-tight text-black">
-                Study AI
-              </span>
-            )}
-          </div>
+        {/* Header (toggle only, brand removed per spec) */}
+        <div
+          className={cn(
+            "flex items-center px-3 pb-3 pt-4",
+            open ? "justify-end" : "justify-center"
+          )}
+        >
           <button
             data-testid="sidebar-toggle"
             onClick={onToggle}
@@ -141,11 +415,14 @@ const Sidebar = ({ open, onToggle, activeId, onSelect, onNewQuiz }) => {
           </button>
         </div>
 
-        {/* New Quiz Button */}
-        <div className="px-3">
+        {/* Section tabs */}
+        <SectionTabs section={section} onChange={onSectionChange} open={open} />
+
+        {/* New button */}
+        <div className="mt-3 px-3">
           <button
-            data-testid="new-quiz-button"
-            onClick={onNewQuiz}
+            data-testid="new-button"
+            onClick={onNew}
             className={cn(
               "group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 active:scale-[0.98]",
               "bg-black text-white hover:bg-zinc-800 shadow-sm",
@@ -153,20 +430,22 @@ const Sidebar = ({ open, onToggle, activeId, onSelect, onNewQuiz }) => {
             )}
           >
             <Plus className="h-[18px] w-[18px] shrink-0 transition-transform duration-200 group-hover:rotate-90" />
-            {open && <span className="truncate">New Quiz</span>}
+            {open && <span className="truncate">{newLabel}</span>}
           </button>
         </div>
 
         {/* Search */}
         {open && (
-          <div className="mt-4 px-3">
+          <div className="mt-3 px-3">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
               <input
                 data-testid="search-input"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search quizzes..."
+                placeholder={
+                  section === "chat" ? "Search chats..." : "Search quizzes..."
+                }
                 className="w-full rounded-lg bg-white/80 py-2 pl-9 pr-3 text-sm text-black placeholder:text-zinc-400 outline-none ring-1 ring-zinc-200 transition focus:bg-white focus:ring-black/20"
               />
             </div>
@@ -174,10 +453,10 @@ const Sidebar = ({ open, onToggle, activeId, onSelect, onNewQuiz }) => {
         )}
 
         {/* Recents */}
-        <div className="mt-5 flex-1 overflow-hidden">
+        <div className="mt-4 flex-1 overflow-hidden">
           {open && (
             <div className="px-5 pb-2 text-[11px] font-medium uppercase tracking-wider text-zinc-500">
-              Recent Quizzes
+              {recentLabel}
             </div>
           )}
           <div className="h-full overflow-y-auto px-2 pb-4 [scrollbar-width:thin]">
@@ -185,7 +464,7 @@ const Sidebar = ({ open, onToggle, activeId, onSelect, onNewQuiz }) => {
               {filtered.map((item) => (
                 <li key={item.id}>
                   <button
-                    data-testid={`recent-quiz-${item.id}`}
+                    data-testid={`recent-item-${item.id}`}
                     onClick={() => onSelect(item.id)}
                     className={cn(
                       "group flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition-colors",
@@ -215,7 +494,7 @@ const Sidebar = ({ open, onToggle, activeId, onSelect, onNewQuiz }) => {
               ))}
               {open && filtered.length === 0 && (
                 <li className="px-3 py-6 text-center text-xs text-zinc-500">
-                  No quizzes found
+                  No {section === "chat" ? "chats" : "quizzes"} found
                 </li>
               )}
             </ul>
@@ -256,12 +535,8 @@ const MCQCard = ({ q, index, selected, onSelect }) => {
   return (
     <div
       data-testid={`mcq-card-${index}`}
-      className={cn(
-        "group relative overflow-hidden rounded-2xl p-6 transition-all duration-300",
-        "border border-zinc-200 bg-white shadow-[0_1px_0_rgba(255,255,255,0.8)_inset,0_4px_20px_rgba(17,24,39,0.04)] hover:border-zinc-300"
-      )}
+      className="group relative overflow-hidden rounded-2xl border border-zinc-200 bg-white p-6 shadow-[0_1px_0_rgba(255,255,255,0.8)_inset,0_4px_20px_rgba(17,24,39,0.04)] transition-all duration-300 hover:border-zinc-300"
     >
-      {/* Question header */}
       <div className="mb-5 flex items-start gap-3">
         <div className="flex h-7 min-w-[28px] items-center justify-center rounded-md bg-black/[0.05] px-2 text-[11px] font-semibold text-black">
           {String(index + 1).padStart(2, "0")}
@@ -271,7 +546,6 @@ const MCQCard = ({ q, index, selected, onSelect }) => {
         </h3>
       </div>
 
-      {/* Options */}
       <div className="grid gap-2.5 sm:grid-cols-2">
         {q.options.map((opt, i) => {
           const isSelected = selected === opt;
@@ -322,7 +596,6 @@ const MCQCard = ({ q, index, selected, onSelect }) => {
         })}
       </div>
 
-      {/* Explanation */}
       <div
         className={cn(
           "grid overflow-hidden transition-all duration-500 ease-out",
@@ -364,7 +637,6 @@ const QuizView = ({ questions, answers, onAnswer, onReset }) => {
 
   return (
     <section className="mx-auto w-full max-w-3xl px-6 pb-32">
-      {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-[11px] font-medium text-zinc-700">
@@ -388,7 +660,6 @@ const QuizView = ({ questions, answers, onAnswer, onReset }) => {
         </button>
       </div>
 
-      {/* Progress */}
       <div className="mb-8 rounded-xl border border-zinc-200 bg-white p-4">
         <div className="mb-3 flex items-center justify-between text-xs text-zinc-500">
           <span>
@@ -410,7 +681,6 @@ const QuizView = ({ questions, answers, onAnswer, onReset }) => {
         </div>
       </div>
 
-      {/* Questions */}
       <div className="space-y-4">
         {questions.map((q, i) => (
           <MCQCard
@@ -426,8 +696,8 @@ const QuizView = ({ questions, answers, onAnswer, onReset }) => {
   );
 };
 
-/* ---------------- Composer ---------------- */
-const ComposerInput = ({ onSubmitText, onUpload }) => {
+/* ---------------- MCQ Composer (upload-focused) ---------------- */
+const MCQComposer = ({ onSubmitText, onUpload }) => {
   const [text, setText] = useState("");
   const fileRef = useRef(null);
   const taRef = useRef(null);
@@ -457,25 +727,18 @@ const ComposerInput = ({ onSubmitText, onUpload }) => {
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6">
-      <div
-        className={cn(
-          "group relative rounded-2xl p-2 transition-all duration-300",
-          "border border-zinc-200 bg-white/80 backdrop-blur-2xl backdrop-saturate-150",
-          "shadow-[0_12px_40px_rgba(17,24,39,0.06),inset_0_1px_0_rgba(255,255,255,0.9)]",
-          "focus-within:border-zinc-400 focus-within:shadow-[0_16px_50px_rgba(17,24,39,0.10),inset_0_1px_0_rgba(255,255,255,1)]"
-        )}
-      >
+      <div className="group relative rounded-2xl border border-zinc-200 bg-white/80 p-2 shadow-[0_12px_40px_rgba(17,24,39,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-2xl backdrop-saturate-150 transition-all duration-300 focus-within:border-zinc-400 focus-within:shadow-[0_16px_50px_rgba(17,24,39,0.10),inset_0_1px_0_rgba(255,255,255,1)]">
         <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-b from-white/60 to-transparent opacity-70" />
 
         <div className="relative">
           <textarea
-            data-testid="composer-textarea"
+            data-testid="mcq-textarea"
             ref={taRef}
             rows={1}
             value={text}
             onChange={handleInput}
             onKeyDown={handleKey}
-            placeholder="Paste your study notes, a topic, or ask for a quiz..."
+            placeholder="Paste text or upload a file to generate MCQs..."
             className="block max-h-[220px] w-full resize-none bg-transparent px-4 pt-3 pb-2 text-[15px] leading-relaxed text-black placeholder:text-zinc-400 outline-none"
           />
 
@@ -506,7 +769,7 @@ const ComposerInput = ({ onSubmitText, onUpload }) => {
             </div>
 
             <button
-              data-testid="submit-text-button"
+              data-testid="generate-mcq"
               onClick={handleSubmit}
               disabled={text.trim().length === 0}
               className={cn(
@@ -516,7 +779,7 @@ const ComposerInput = ({ onSubmitText, onUpload }) => {
                   : "bg-black text-white shadow-[0_0_0_1px_rgba(0,0,0,0.1)] hover:bg-zinc-800 active:scale-[0.97]"
               )}
             >
-              <span>Generate</span>
+              <span>Generate MCQs</span>
               <ArrowUp className="h-[15px] w-[15px]" />
             </button>
           </div>
@@ -529,8 +792,187 @@ const ComposerInput = ({ onSubmitText, onUpload }) => {
   );
 };
 
-/* ---------------- Hero ---------------- */
-const Hero = () => {
+/* ---------------- Chat Composer (with model switcher) ---------------- */
+const ChatComposer = ({ onSend, model, onModelChange }) => {
+  const [text, setText] = useState("");
+  const taRef = useRef(null);
+
+  const handleInput = (e) => {
+    setText(e.target.value);
+    const el = taRef.current;
+    if (el) {
+      el.style.height = "auto";
+      el.style.height = `${Math.min(el.scrollHeight, 220)}px`;
+    }
+  };
+
+  const handleSubmit = () => {
+    if (text.trim().length === 0) return;
+    onSend(text);
+    setText("");
+    if (taRef.current) taRef.current.style.height = "auto";
+  };
+
+  const handleKey = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
+  return (
+    <div className="mx-auto w-full max-w-3xl px-6">
+      <div className="group relative rounded-2xl border border-zinc-200 bg-white/80 p-2 shadow-[0_12px_40px_rgba(17,24,39,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-2xl backdrop-saturate-150 transition-all duration-300 focus-within:border-zinc-400 focus-within:shadow-[0_16px_50px_rgba(17,24,39,0.10),inset_0_1px_0_rgba(255,255,255,1)]">
+        <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-b from-white/60 to-transparent opacity-70" />
+
+        <div className="relative">
+          <textarea
+            data-testid="chat-textarea"
+            ref={taRef}
+            rows={1}
+            value={text}
+            onChange={handleInput}
+            onKeyDown={handleKey}
+            placeholder="Ask anything — start a conversation..."
+            className="block max-h-[220px] w-full resize-none bg-transparent px-4 pt-3 pb-2 text-[15px] leading-relaxed text-black placeholder:text-zinc-400 outline-none"
+          />
+
+          <div className="flex items-center justify-between gap-2 px-2 pb-1 pt-1">
+            <ModelSwitcher value={model} onChange={onModelChange} />
+
+            <button
+              data-testid="send-chat"
+              onClick={handleSubmit}
+              disabled={text.trim().length === 0}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition-all duration-200",
+                text.trim().length === 0
+                  ? "cursor-not-allowed bg-zinc-100 text-zinc-400"
+                  : "bg-black text-white shadow-[0_0_0_1px_rgba(0,0,0,0.1)] hover:bg-zinc-800 active:scale-[0.97]"
+              )}
+            >
+              <span>Send</span>
+              <ArrowUp className="h-[15px] w-[15px]" />
+            </button>
+          </div>
+        </div>
+      </div>
+      <p className="mt-3 text-center text-[11px] text-zinc-500">
+        Responses may be inaccurate. Verify important information.
+      </p>
+    </div>
+  );
+};
+
+/* ---------------- Chat Messages ---------------- */
+const DUMMY_ASSISTANT_REPLY = (userText, modelName) =>
+  `Great question! Here's a quick take using ${modelName}:\n\nYou asked — "${userText.slice(
+    0,
+    120
+  )}${userText.length > 120 ? "…" : ""}"\n\nLet me break it down into three parts:\n\n1. Core idea — the underlying concept and why it matters.\n2. A concrete example so it clicks intuitively.\n3. Common pitfalls to watch out for as you apply it.\n\nWant me to dive deeper on any of these, or try a worked example?`;
+
+const ChatMessage = ({ role, content, modelName }) => {
+  const isUser = role === "user";
+  return (
+    <div
+      data-testid={`chat-message-${role}`}
+      className={cn("flex gap-3", isUser ? "justify-end" : "justify-start")}
+    >
+      {!isUser && (
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black text-white">
+          <Bot className="h-4 w-4" />
+        </div>
+      )}
+      <div
+        className={cn(
+          "max-w-[80%] rounded-2xl px-4 py-3 text-[14.5px] leading-relaxed",
+          isUser
+            ? "bg-black text-white"
+            : "border border-zinc-200 bg-white text-zinc-800 shadow-sm"
+        )}
+      >
+        {!isUser && modelName && (
+          <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wider text-zinc-500">
+            {modelName}
+          </div>
+        )}
+        <div className="whitespace-pre-wrap">{content}</div>
+        {!isUser && (
+          <div className="mt-3 flex items-center gap-1 border-t border-zinc-100 pt-2 text-zinc-400">
+            <button className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-zinc-100 hover:text-zinc-700">
+              <Copy className="h-[13px] w-[13px]" />
+            </button>
+            <button className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-zinc-100 hover:text-zinc-700">
+              <RefreshCw className="h-[13px] w-[13px]" />
+            </button>
+            <button className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-zinc-100 hover:text-zinc-700">
+              <ThumbsUp className="h-[13px] w-[13px]" />
+            </button>
+            <button className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-zinc-100 hover:text-zinc-700">
+              <ThumbsDown className="h-[13px] w-[13px]" />
+            </button>
+          </div>
+        )}
+      </div>
+      {isUser && (
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-zinc-700 ring-1 ring-zinc-200">
+          <User className="h-4 w-4" />
+        </div>
+      )}
+    </div>
+  );
+};
+
+const TypingIndicator = () => (
+  <div data-testid="typing-indicator" className="flex gap-3">
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black text-white">
+      <Bot className="h-4 w-4" />
+    </div>
+    <div className="flex items-center gap-1.5 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-sm">
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-400 [animation-delay:-0.3s]" />
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-400 [animation-delay:-0.15s]" />
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-400" />
+    </div>
+  </div>
+);
+
+/* ---------------- Hero (per section) ---------------- */
+const ChatHero = ({ onPick }) => {
+  const prompts = [
+    "Explain quantum entanglement simply",
+    "Help me draft an email to my professor",
+    "Debug this JavaScript closure issue",
+    "Summarize the key causes of WWII",
+  ];
+  return (
+    <div className="mx-auto w-full max-w-3xl px-6 pb-8 pt-16 text-center md:pt-24">
+      <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-[11px] font-medium text-zinc-700">
+        <Sparkles className="h-3 w-3 text-amber-500" />
+        Chat with top AI models
+      </div>
+      <h1 className="mx-auto max-w-2xl text-4xl font-semibold leading-[1.1] tracking-tight text-black md:text-5xl">
+        How can I help you today?
+      </h1>
+      <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-zinc-500">
+        Start a conversation. Pick your favorite model — Gemini, Claude, GPT, or
+        Kimi — and get thoughtful answers in seconds.
+      </p>
+      <div className="mt-8 flex flex-wrap justify-center gap-2">
+        {prompts.map((p) => (
+          <button
+            key={p}
+            onClick={() => onPick(p)}
+            className="rounded-full border border-zinc-200 bg-white px-3.5 py-1.5 text-[12.5px] text-zinc-700 transition hover:-translate-y-0.5 hover:border-zinc-400 hover:bg-zinc-50 hover:text-black"
+          >
+            {p}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const MCQHero = () => {
   const suggestions = [
     "Quiz me on photosynthesis",
     "Python OOP fundamentals",
@@ -540,17 +982,16 @@ const Hero = () => {
   return (
     <div className="mx-auto w-full max-w-3xl px-6 pb-8 pt-16 text-center md:pt-24">
       <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-[11px] font-medium text-zinc-700">
-        <Sparkles className="h-3 w-3 text-amber-500" />
-        Your AI study partner
+        <ListChecks className="h-3 w-3 text-amber-500" />
+        Generate MCQs from text or images
       </div>
       <h1 className="mx-auto max-w-2xl text-4xl font-semibold leading-[1.1] tracking-tight text-black md:text-5xl">
-        What would you like to study today?
+        Turn any material into a quiz.
       </h1>
       <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-zinc-500">
-        Upload notes, paste text, or describe a topic. I'll craft a personalized
-        quiz with detailed explanations to deepen your understanding.
+        Upload notes, paste text, or describe a topic. I'll craft multiple-choice
+        questions with detailed explanations to deepen your understanding.
       </p>
-
       <div className="mt-8 flex flex-wrap justify-center gap-2">
         {suggestions.map((s) => (
           <button
@@ -568,46 +1009,108 @@ const Hero = () => {
 /* ---------------- Root ---------------- */
 export default function StudyAssistant() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [section, setSection] = useState("chat"); // 'chat' | 'mcq'
   const [activeId, setActiveId] = useState(null);
+
+  // MCQ state
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
 
+  // Chat state
+  const [messages, setMessages] = useState([]); // {role, content, model}
+  const [isTyping, setIsTyping] = useState(false);
+  const [model, setModel] = useState(MODELS[0].id);
+  const chatScrollRef = useRef(null);
+
+  const currentModel = MODELS.find((m) => m.id === model) || MODELS[0];
+
+  // Auto-scroll chat
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    }
+  }, [messages, isTyping]);
+
+  /* --- MCQ handlers --- */
   const startQuiz = () => {
     setQuestions(DUMMY_QUIZ);
     setAnswers({});
-    setActiveId("1");
+    setActiveId("m1");
     requestAnimationFrame(() => {
       document
         .getElementById("quiz-anchor")
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   };
-
-  const handleSelect = (id) => {
-    setActiveId(id);
-    setQuestions(DUMMY_QUIZ);
-    setAnswers({});
-  };
-
   const handleAnswer = (i, opt) => {
     if (answers[i] !== undefined) return;
     setAnswers((prev) => ({ ...prev, [i]: opt }));
   };
-
-  const handleReset = () => {
+  const handleResetQuiz = () => {
     setQuestions([]);
     setAnswers({});
     setActiveId(null);
   };
 
-  const handleUpload = () => {
-    startQuiz();
+  /* --- Chat handlers --- */
+  const handleSend = (text) => {
+    const userMsg = { role: "user", content: text };
+    setMessages((prev) => [...prev, userMsg]);
+    setIsTyping(true);
+    // Simulated assistant response (UI only)
+    const modelName = currentModel.name;
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: DUMMY_ASSISTANT_REPLY(text, modelName),
+          model: modelName,
+        },
+      ]);
+      setIsTyping(false);
+    }, 900);
+  };
+  const handleResetChat = () => {
+    setMessages([]);
+    setIsTyping(false);
+    setActiveId(null);
   };
 
-  const handleSubmitText = () => {
-    startQuiz();
+  /* --- Sidebar events --- */
+  const handleSectionChange = (s) => {
+    setSection(s);
+    setActiveId(null);
+  };
+  const handleNew = () => {
+    if (section === "chat") handleResetChat();
+    else handleResetQuiz();
+  };
+  const handleSelect = (id) => {
+    setActiveId(id);
+    if (section === "chat") {
+      // Populate a sample conversation
+      setMessages([
+        {
+          role: "user",
+          content: "Can you give me a quick overview of this topic?",
+        },
+        {
+          role: "assistant",
+          content: DUMMY_ASSISTANT_REPLY(
+            "Quick overview of this topic",
+            currentModel.name
+          ),
+          model: currentModel.name,
+        },
+      ]);
+    } else {
+      setQuestions(DUMMY_QUIZ);
+      setAnswers({});
+    }
   };
 
+  const hasChat = messages.length > 0 || isTyping;
   const hasQuiz = questions.length > 0;
 
   return (
@@ -628,9 +1131,11 @@ export default function StudyAssistant() {
         <Sidebar
           open={sidebarOpen}
           onToggle={() => setSidebarOpen((v) => !v)}
+          section={section}
+          onSectionChange={handleSectionChange}
           activeId={activeId}
           onSelect={handleSelect}
-          onNewQuiz={handleReset}
+          onNew={handleNew}
         />
 
         <main className="relative flex h-screen min-w-0 flex-1 flex-col">
@@ -645,8 +1150,20 @@ export default function StudyAssistant() {
                 <Menu className="h-[18px] w-[18px]" />
               </button>
               <div className="flex items-center gap-2 text-sm text-zinc-500">
-                <BookOpen className="h-4 w-4" />
-                <span>{hasQuiz ? "Quiz session" : "New session"}</span>
+                {section === "chat" ? (
+                  <MessageCircle className="h-4 w-4" />
+                ) : (
+                  <ListChecks className="h-4 w-4" />
+                )}
+                <span>
+                  {section === "chat"
+                    ? hasChat
+                      ? "Chat session"
+                      : "New chat"
+                    : hasQuiz
+                    ? "Quiz session"
+                    : "New MCQ session"}
+                </span>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -660,39 +1177,67 @@ export default function StudyAssistant() {
           </header>
 
           {/* Scroll area */}
-          <div className="relative flex-1 overflow-y-auto">
-            {!hasQuiz && <Hero />}
-
-            <div id="quiz-anchor" />
-
-            {hasQuiz && (
-              <div className="pt-6">
-                <QuizView
-                  questions={questions}
-                  answers={answers}
-                  onAnswer={handleAnswer}
-                  onReset={handleReset}
-                />
-              </div>
+          <div
+            ref={chatScrollRef}
+            className="relative flex-1 overflow-y-auto"
+          >
+            {section === "chat" ? (
+              <>
+                {!hasChat && <ChatHero onPick={handleSend} />}
+                {hasChat && (
+                  <div className="mx-auto w-full max-w-3xl space-y-5 px-6 py-8 pb-24">
+                    {messages.map((m, i) => (
+                      <ChatMessage
+                        key={i}
+                        role={m.role}
+                        content={m.content}
+                        modelName={m.model}
+                      />
+                    ))}
+                    {isTyping && <TypingIndicator />}
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {!hasQuiz && <MCQHero />}
+                <div id="quiz-anchor" />
+                {hasQuiz && (
+                  <div className="pt-6">
+                    <QuizView
+                      questions={questions}
+                      answers={answers}
+                      onAnswer={handleAnswer}
+                      onReset={handleResetQuiz}
+                    />
+                  </div>
+                )}
+              </>
             )}
           </div>
 
           {/* Composer */}
-          {!hasQuiz ? (
-            <div className="pb-8">
-              <ComposerInput
-                onSubmitText={handleSubmitText}
-                onUpload={handleUpload}
+          <div
+            className={cn(
+              "py-4",
+              (section === "chat" && hasChat) || (section === "mcq" && hasQuiz)
+                ? "border-t border-zinc-200/80 bg-white/70 backdrop-blur-xl"
+                : ""
+            )}
+          >
+            {section === "chat" ? (
+              <ChatComposer
+                onSend={handleSend}
+                model={model}
+                onModelChange={setModel}
               />
-            </div>
-          ) : (
-            <div className="border-t border-zinc-200/80 bg-white/70 py-4 backdrop-blur-xl">
-              <ComposerInput
-                onSubmitText={handleSubmitText}
-                onUpload={handleUpload}
+            ) : (
+              <MCQComposer
+                onSubmitText={startQuiz}
+                onUpload={startQuiz}
               />
-            </div>
-          )}
+            )}
+          </div>
         </main>
       </div>
     </div>
