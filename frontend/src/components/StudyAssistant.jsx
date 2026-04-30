@@ -1108,27 +1108,21 @@ export default function StudyAssistant() {
         />
 
         <main className="relative flex h-screen min-w-0 flex-1 flex-col">
-          {/* Top bar */}
-          <header className="relative flex items-center justify-between border-b border-zinc-200/80 bg-white/70 px-5 py-3 backdrop-blur-xl">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setSidebarOpen((v) => !v)}
-                className="flex h-8 w-8 items-center justify-center rounded-md text-zinc-500 transition hover:bg-black/5 hover:text-black md:hidden"
-                aria-label="Menu"
-              >
-                <Menu className="h-[18px] w-[18px]" />
-              </button>
-            </div>
-
-            {/* Centered Chat / MCQ switcher */}
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          {/* Floating Chat / MCQ switcher — no full-width header so it won't clash with browser chrome */}
+          <div className="pointer-events-none absolute inset-x-0 top-4 z-20 flex justify-center">
+            <div className="pointer-events-auto">
               <SectionTabs section={section} onChange={handleSectionChange} />
             </div>
+          </div>
 
-            <div className="flex items-center gap-2">
-              {/* right slot intentionally empty */}
-            </div>
-          </header>
+          {/* Mobile sidebar toggle (floating, top-left) */}
+          <button
+            onClick={() => setSidebarOpen((v) => !v)}
+            className="pointer-events-auto absolute left-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-600 shadow-sm transition hover:border-zinc-400 hover:text-black md:hidden"
+            aria-label="Menu"
+          >
+            <Menu className="h-[18px] w-[18px]" />
+          </button>
 
           {/* Scroll area */}
           <div
@@ -1139,7 +1133,7 @@ export default function StudyAssistant() {
               <>
                 {!hasChat && <ChatHero onPick={handleSend} />}
                 {hasChat && (
-                  <div className="mx-auto w-full max-w-3xl space-y-5 px-6 py-8 pb-24">
+                  <div className="mx-auto w-full max-w-3xl space-y-5 px-6 pb-24 pt-20">
                     {messages.map((m, i) => (
                       <ChatMessage
                         key={i}
@@ -1157,7 +1151,7 @@ export default function StudyAssistant() {
                 {!hasQuiz && <MCQHero />}
                 <div id="quiz-anchor" />
                 {hasQuiz && (
-                  <div className="pt-6">
+                  <div className="pt-20">
                     <QuizView
                       questions={questions}
                       answers={answers}
