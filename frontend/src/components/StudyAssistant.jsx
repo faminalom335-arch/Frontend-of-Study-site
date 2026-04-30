@@ -289,69 +289,39 @@ const ModelSwitcher = ({ value, onChange }) => {
 };
 
 /* ---------------- Sidebar ---------------- */
-const SectionTabs = ({ section, onChange, open }) => {
+const SectionTabs = ({ section, onChange }) => {
   const tabs = [
     { id: "chat", label: "Chat", Icon: MessageCircle },
     { id: "mcq", label: "MCQ", Icon: ListChecks },
   ];
 
-  if (!open) {
-    // icon-only vertical stack when collapsed
-    return (
-      <div className="flex flex-col items-center gap-1.5 px-2">
-        {tabs.map((t) => {
-          const active = section === t.id;
-          const Icon = t.Icon;
-          return (
-            <button
-              key={t.id}
-              data-testid={`tab-${t.id}-collapsed`}
-              onClick={() => onChange(t.id)}
-              className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-lg transition",
-                active
-                  ? "bg-black text-white"
-                  : "text-zinc-500 hover:bg-black/5 hover:text-black"
-              )}
-              title={t.label}
-            >
-              <Icon className="h-[17px] w-[17px]" />
-            </button>
-          );
-        })}
-      </div>
-    );
-  }
-
   return (
-    <div className="px-3">
-      <div className="relative flex items-center rounded-xl border border-zinc-200 bg-white p-1">
-        {/* sliding highlight */}
-        <div
-          className={cn(
-            "absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg bg-black transition-all duration-300 ease-out",
-            section === "chat" ? "left-1" : "left-[calc(50%+0px)]"
-          )}
-        />
-        {tabs.map((t) => {
-          const active = section === t.id;
-          const Icon = t.Icon;
-          return (
-            <button
-              key={t.id}
-              data-testid={`tab-${t.id}`}
-              onClick={() => onChange(t.id)}
-              className={cn(
-                "relative z-10 flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-[12.5px] font-semibold transition-colors duration-200",
-                active ? "text-white" : "text-zinc-600 hover:text-black"
-              )}
-            >
-              <Icon className="h-[14px] w-[14px]" />
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
+    <div className="relative inline-flex items-center rounded-xl border border-zinc-200 bg-white p-1 shadow-sm">
+      {/* sliding highlight */}
+      <div
+        className={cn(
+          "absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg bg-black transition-all duration-300 ease-out",
+          section === "chat" ? "left-1" : "left-[calc(50%+0px)]"
+        )}
+      />
+      {tabs.map((t) => {
+        const active = section === t.id;
+        const Icon = t.Icon;
+        return (
+          <button
+            key={t.id}
+            data-testid={`tab-${t.id}`}
+            onClick={() => onChange(t.id)}
+            className={cn(
+              "relative z-10 flex items-center justify-center gap-1.5 rounded-lg px-4 py-1.5 text-[12.5px] font-semibold transition-colors duration-200",
+              active ? "text-white" : "text-zinc-600 hover:text-black"
+            )}
+          >
+            <Icon className="h-[14px] w-[14px]" />
+            {t.label}
+          </button>
+        );
+      })}
     </div>
   );
 };
@@ -415,8 +385,7 @@ const Sidebar = ({
           </button>
         </div>
 
-        {/* Section tabs */}
-        <SectionTabs section={section} onChange={onSectionChange} open={open} />
+        {/* Section tabs moved to top bar — kept here as a spacer */}
 
         {/* New button */}
         <div className="mt-3 px-3">
@@ -1140,7 +1109,7 @@ export default function StudyAssistant() {
 
         <main className="relative flex h-screen min-w-0 flex-1 flex-col">
           {/* Top bar */}
-          <header className="flex items-center justify-between border-b border-zinc-200/80 bg-white/70 px-5 py-3 backdrop-blur-xl">
+          <header className="relative flex items-center justify-between border-b border-zinc-200/80 bg-white/70 px-5 py-3 backdrop-blur-xl">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSidebarOpen((v) => !v)}
@@ -1149,30 +1118,15 @@ export default function StudyAssistant() {
               >
                 <Menu className="h-[18px] w-[18px]" />
               </button>
-              <div className="flex items-center gap-2 text-sm text-zinc-500">
-                {section === "chat" ? (
-                  <MessageCircle className="h-4 w-4" />
-                ) : (
-                  <ListChecks className="h-4 w-4" />
-                )}
-                <span>
-                  {section === "chat"
-                    ? hasChat
-                      ? "Chat session"
-                      : "New chat"
-                    : hasQuiz
-                    ? "Quiz session"
-                    : "New MCQ session"}
-                </span>
-              </div>
             </div>
+
+            {/* Centered Chat / MCQ switcher */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+              <SectionTabs section={section} onChange={handleSectionChange} />
+            </div>
+
             <div className="flex items-center gap-2">
-              <button className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:border-zinc-400 hover:bg-zinc-50 hover:text-black">
-                Share
-              </button>
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-xs font-semibold text-white">
-                A
-              </div>
+              {/* right slot intentionally empty */}
             </div>
           </header>
 
