@@ -25,6 +25,10 @@ import {
   RefreshCw,
   ThumbsUp,
   ThumbsDown,
+  Gem,
+  Asterisk,
+  Atom,
+  Moon,
 } from "lucide-react";
 
 /**
@@ -102,11 +106,26 @@ const DUMMY_RECENT_MCQ = [
 
 /* ---------------- AI Models ---------------- */
 
+// Black & white styling for provider badges (study-friendly)
 const PROVIDER_STYLES = {
-  Google: "bg-blue-100 text-blue-700 ring-blue-200",
-  Anthropic: "bg-orange-100 text-orange-700 ring-orange-200",
-  OpenAI: "bg-emerald-100 text-emerald-700 ring-emerald-200",
-  Kimi: "bg-purple-100 text-purple-700 ring-purple-200",
+  Google: "bg-black text-white ring-black/20",
+  Anthropic: "bg-black text-white ring-black/20",
+  OpenAI: "bg-black text-white ring-black/20",
+  Kimi: "bg-black text-white ring-black/20",
+};
+
+// Generic abstract icons per provider (NOT official brand logos)
+const PROVIDER_ICONS = {
+  Google: Gem,
+  Anthropic: Asterisk,
+  OpenAI: Atom,
+  Kimi: Moon,
+};
+
+const ProviderIcon = ({ provider, className = "h-3.5 w-3.5" }) => {
+  const Icon = PROVIDER_ICONS[provider];
+  if (!Icon) return null;
+  return <Icon className={className} strokeWidth={2.2} />;
 };
 
 const MODELS = [
@@ -195,11 +214,11 @@ const ModelSwitcher = ({ value, onChange }) => {
       >
         <span
           className={cn(
-            "flex h-4 w-4 items-center justify-center rounded-sm text-[9px] font-bold ring-1",
+            "flex h-5 w-5 items-center justify-center rounded-md ring-1",
             PROVIDER_STYLES[current.provider]
           )}
         >
-          {current.provider[0]}
+          <ProviderIcon provider={current.provider} className="h-3 w-3" />
         </span>
         <span className="max-w-[160px] truncate">{current.name}</span>
         <ChevronDown
@@ -221,11 +240,11 @@ const ModelSwitcher = ({ value, onChange }) => {
                 <div className="flex items-center gap-2 px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
                   <span
                     className={cn(
-                      "flex h-3.5 w-3.5 items-center justify-center rounded-sm text-[8px] font-bold ring-1",
+                      "flex h-4 w-4 items-center justify-center rounded ring-1",
                       PROVIDER_STYLES[provider]
                     )}
                   >
-                    {provider[0]}
+                    <ProviderIcon provider={provider} className="h-2.5 w-2.5" />
                   </span>
                   {provider}
                 </div>
@@ -246,6 +265,19 @@ const ModelSwitcher = ({ value, onChange }) => {
                           : "text-zinc-800 hover:bg-zinc-100"
                       )}
                     >
+                      <span
+                        className={cn(
+                          "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ring-1",
+                          active
+                            ? "bg-white text-black ring-white/30"
+                            : "bg-black text-white ring-black/10"
+                        )}
+                      >
+                        <ProviderIcon
+                          provider={m.provider}
+                          className="h-3.5 w-3.5"
+                        />
+                      </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span className="truncate text-[13px] font-semibold">
@@ -257,7 +289,7 @@ const ModelSwitcher = ({ value, onChange }) => {
                                 "rounded px-1.5 py-0.5 text-[9px] font-bold tracking-wide",
                                 active
                                   ? "bg-white/20 text-white"
-                                  : "bg-amber-100 text-amber-700"
+                                  : "bg-zinc-900 text-white"
                               )}
                             >
                               {m.badge}
@@ -334,9 +366,12 @@ const Sidebar = ({
   activeId,
   onSelect,
   onNew,
+  recentChats,
+  recentMCQ,
+  onDelete,
 }) => {
   const [query, setQuery] = useState("");
-  const pool = section === "chat" ? DUMMY_RECENT_CHATS : DUMMY_RECENT_MCQ;
+  const pool = section === "chat" ? recentChats : recentMCQ;
   const filtered = pool.filter((r) =>
     r.title.toLowerCase().includes(query.toLowerCase())
   );
@@ -432,9 +467,7 @@ const Sidebar = ({
             <ul className="space-y-0.5">
               {filtered.map((item) => (
                 <li key={item.id}>
-                  <button
-                    data-testid={`recent-item-${item.id}`}
-                    onClick={() => onSelect(item.id)}
+                  <div
                     className={cn(
                       "group flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition-colors",
                       activeId === item.id
@@ -442,23 +475,43 @@ const Sidebar = ({
                         : "text-zinc-600 hover:bg-black/[0.04] hover:text-black",
                       !open && "justify-center px-0"
                     )}
-                    title={item.title}
                   >
-                    <MessageSquare className="h-[15px] w-[15px] shrink-0" />
+                    <button
+                      data-testid={`recent-item-${item.id}`}
+                      onClick={() => onSelect(item.id)}
+                      className={cn(
+                        "flex min-w-0 flex-1 items-center gap-3 text-left",
+                        !open && "justify-center"
+                      )}
+                      title={item.title}
+                    >
+                      <MessageSquare className="h-[15px] w-[15px] shrink-0" />
+                      {open && (
+                        <div className="flex min-w-0 flex-1 flex-col">
+                          <span className="truncate text-[13px] font-medium">
+                            {item.title}
+                          </span>
+                          <span className="text-[11px] text-zinc-500">
+                            {item.date}
+                          </span>
+                        </div>
+                      )}
+                    </button>
                     {open && (
-                      <div className="flex min-w-0 flex-1 flex-col">
-                        <span className="truncate text-[13px] font-medium">
-                          {item.title}
-                        </span>
-                        <span className="text-[11px] text-zinc-500">
-                          {item.date}
-                        </span>
-                      </div>
+                      <button
+                        data-testid={`delete-item-${item.id}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(item.id);
+                        }}
+                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-zinc-400 opacity-0 transition hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
+                        aria-label="Delete"
+                        title="Delete"
+                      >
+                        <Trash2 className="h-[14px] w-[14px]" />
+                      </button>
                     )}
-                    {open && (
-                      <Trash2 className="h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" />
-                    )}
-                  </button>
+                  </div>
                 </li>
               ))}
               {open && filtered.length === 0 && (
@@ -840,7 +893,7 @@ const DUMMY_ASSISTANT_REPLY = (userText, modelName) =>
     120
   )}${userText.length > 120 ? "…" : ""}"\n\nLet me break it down into three parts:\n\n1. Core idea — the underlying concept and why it matters.\n2. A concrete example so it clicks intuitively.\n3. Common pitfalls to watch out for as you apply it.\n\nWant me to dive deeper on any of these, or try a worked example?`;
 
-const ChatMessage = ({ role, content, modelName }) => {
+const ChatMessage = ({ role, content, modelName, modelProvider }) => {
   const isUser = role === "user";
   return (
     <div
@@ -848,8 +901,12 @@ const ChatMessage = ({ role, content, modelName }) => {
       className={cn("flex gap-3", isUser ? "justify-end" : "justify-start")}
     >
       {!isUser && (
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black text-white">
-          <Bot className="h-4 w-4" />
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black text-white ring-1 ring-black/10">
+          {modelProvider ? (
+            <ProviderIcon provider={modelProvider} className="h-4 w-4" />
+          ) : (
+            <Bot className="h-4 w-4" />
+          )}
         </div>
       )}
       <div
@@ -861,7 +918,13 @@ const ChatMessage = ({ role, content, modelName }) => {
         )}
       >
         {!isUser && modelName && (
-          <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wider text-zinc-500">
+          <div className="mb-1 flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-zinc-500">
+            {modelProvider && (
+              <ProviderIcon
+                provider={modelProvider}
+                className="h-3 w-3 text-black"
+              />
+            )}
             {modelName}
           </div>
         )}
@@ -892,10 +955,14 @@ const ChatMessage = ({ role, content, modelName }) => {
   );
 };
 
-const TypingIndicator = () => (
+const TypingIndicator = ({ modelProvider }) => (
   <div data-testid="typing-indicator" className="flex gap-3">
-    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black text-white">
-      <Bot className="h-4 w-4" />
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black text-white ring-1 ring-black/10">
+      {modelProvider ? (
+        <ProviderIcon provider={modelProvider} className="h-4 w-4" />
+      ) : (
+        <Bot className="h-4 w-4" />
+      )}
     </div>
     <div className="flex items-center gap-1.5 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-sm">
       <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-400 [animation-delay:-0.3s]" />
@@ -981,12 +1048,16 @@ export default function StudyAssistant() {
   const [section, setSection] = useState("chat"); // 'chat' | 'mcq'
   const [activeId, setActiveId] = useState(null);
 
+  // Recent lists (lifted to state so we can delete)
+  const [recentChats, setRecentChats] = useState(DUMMY_RECENT_CHATS);
+  const [recentMCQ, setRecentMCQ] = useState(DUMMY_RECENT_MCQ);
+
   // MCQ state
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
 
   // Chat state
-  const [messages, setMessages] = useState([]); // {role, content, model}
+  const [messages, setMessages] = useState([]); // {role, content, model, provider}
   const [isTyping, setIsTyping] = useState(false);
   const [model, setModel] = useState(MODELS[0].id);
   const chatScrollRef = useRef(null);
@@ -1026,8 +1097,8 @@ export default function StudyAssistant() {
     const userMsg = { role: "user", content: text };
     setMessages((prev) => [...prev, userMsg]);
     setIsTyping(true);
-    // Simulated assistant response (UI only)
     const modelName = currentModel.name;
+    const modelProvider = currentModel.provider;
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
@@ -1035,6 +1106,7 @@ export default function StudyAssistant() {
           role: "assistant",
           content: DUMMY_ASSISTANT_REPLY(text, modelName),
           model: modelName,
+          provider: modelProvider,
         },
       ]);
       setIsTyping(false);
@@ -1058,7 +1130,6 @@ export default function StudyAssistant() {
   const handleSelect = (id) => {
     setActiveId(id);
     if (section === "chat") {
-      // Populate a sample conversation
       setMessages([
         {
           role: "user",
@@ -1071,11 +1142,26 @@ export default function StudyAssistant() {
             currentModel.name
           ),
           model: currentModel.name,
+          provider: currentModel.provider,
         },
       ]);
     } else {
       setQuestions(DUMMY_QUIZ);
       setAnswers({});
+    }
+  };
+
+  // Delete a recent item (chat or MCQ depending on section).
+  // If we're deleting the currently-open one, also clear its main-pane state.
+  const handleDelete = (id) => {
+    if (section === "chat") {
+      setRecentChats((prev) => prev.filter((c) => c.id !== id));
+    } else {
+      setRecentMCQ((prev) => prev.filter((c) => c.id !== id));
+    }
+    if (activeId === id) {
+      if (section === "chat") handleResetChat();
+      else handleResetQuiz();
     }
   };
 
@@ -1105,6 +1191,9 @@ export default function StudyAssistant() {
           activeId={activeId}
           onSelect={handleSelect}
           onNew={handleNew}
+          recentChats={recentChats}
+          recentMCQ={recentMCQ}
+          onDelete={handleDelete}
         />
 
         <main className="relative flex h-screen min-w-0 flex-1 flex-col">
@@ -1140,9 +1229,12 @@ export default function StudyAssistant() {
                         role={m.role}
                         content={m.content}
                         modelName={m.model}
+                        modelProvider={m.provider}
                       />
                     ))}
-                    {isTyping && <TypingIndicator />}
+                    {isTyping && (
+                      <TypingIndicator modelProvider={currentModel.provider} />
+                    )}
                   </div>
                 )}
               </>
