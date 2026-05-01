@@ -1443,7 +1443,7 @@ const gradeFor = (pct) => GRADE_TABLE.find((g) => pct >= g.min) || GRADE_TABLE[G
 const RED_PEN = "#c42a30";
 const HAND_FONT = "'Edu VIC WA NT Beginner', 'Comic Sans MS', cursive";
 
-const QuizResult = ({ correct, total, onRetry }) => {
+const QuizResult = ({ correct, total, onRetry, onClose }) => {
   const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
   const { grade, remark } = gradeFor(pct);
   const dateStr = new Date().toLocaleDateString(undefined, {
@@ -1507,21 +1507,38 @@ const QuizResult = ({ correct, total, onRetry }) => {
           </div>
         </div>
 
-        <button
-          data-testid="quiz-retry"
-          onClick={onRetry}
-          className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12.5px] font-semibold transition hover:-translate-y-0.5"
-          style={{
-            borderColor: "#c7ad78",
-            background: "rgba(255,255,255,0.55)",
-            color: "#3a2f1e",
-            fontFamily: "'Manrope', system-ui, sans-serif",
-            fontWeight: 650,
-          }}
-        >
-          <RefreshCw className="h-[13px] w-[13px]" />
-          Retry
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            data-testid="quiz-retry"
+            onClick={onRetry}
+            className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12.5px] font-semibold transition hover:-translate-y-0.5"
+            style={{
+              borderColor: "#c7ad78",
+              background: "rgba(255,255,255,0.55)",
+              color: "#3a2f1e",
+              fontFamily: "'Manrope', system-ui, sans-serif",
+              fontWeight: 650,
+            }}
+          >
+            <RefreshCw className="h-[13px] w-[13px]" />
+            Retry
+          </button>
+          {onClose && (
+            <button
+              data-testid="quiz-result-close"
+              onClick={onClose}
+              aria-label="Close"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border transition hover:-translate-y-0.5"
+              style={{
+                borderColor: "#c7ad78",
+                background: "rgba(255,255,255,0.55)",
+                color: "#3a2f1e",
+              }}
+            >
+              <X className="h-[15px] w-[15px]" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Main grade row */}
@@ -1691,6 +1708,35 @@ const QuizView = ({ questions, answers, onAnswer, onReset, onRetry, title }) => 
   ).length;
   const completed = total > 0 && answered === total;
 
+  // Result popup state — auto-opens the moment the quiz transitions to complete.
+  const [resultOpen, setResultOpen] = useState(false);
+  const prevCompletedRef = useRef(false);
+
+  useEffect(() => {
+    if (completed && !prevCompletedRef.current) {
+      // small delay so the last option's tick animation finishes first
+      const t = setTimeout(() => setResultOpen(true), 350);
+      prevCompletedRef.current = true;
+      return () => clearTimeout(t);
+    }
+    if (!completed) prevCompletedRef.current = false;
+  }, [completed]);
+
+  // ESC closes the popup
+  useEffect(() => {
+    if (!resultOpen) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") setResultOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [resultOpen]);
+
+  const handleRetryFromResult = () => {
+    setResultOpen(false);
+    onRetry?.();
+  };
+
   return (
     <section className="mx-auto w-full max-w-3xl px-4 pb-32 sm:px-6">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -1742,9 +1788,6 @@ const QuizView = ({ questions, answers, onAnswer, onReset, onRetry, title }) => 
       </div>
 
       <div className="space-y-4">
-        {completed && (
-          <QuizResult correct={correct} total={total} onRetry={onRetry} />
-        )}
         {questions.map((q, i) => (
           <MCQCard
             key={i}
@@ -1755,6 +1798,52 @@ const QuizView = ({ questions, answers, onAnswer, onReset, onRetry, title }) => 
           />
         ))}
       </div>
+
+      {/* Floating "View Result" pill — visible after completion if the popup was dismissed */}
+      {completed && !resultOpen && (
+        <button
+          data-testid="view-result"
+          onClick={() => setResultOpen(true)}
+          className="fixed bottom-24 right-4 z-30 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-semibold shadow-lg transition hover:-translate-y-0.5 sm:bottom-28 sm:right-6"
+          style={{
+            background: "linear-gradient(180deg, #fbf4de 0%, #eeddb6 100%)",
+            borderColor: "#c7ad78",
+            color: RED_PEN,
+            fontFamily: HAND_FONT,
+            fontWeight: 700,
+            boxShadow: "0 10px 28px rgba(120,85,30,0.22)",
+          }}
+        >
+          <Target className="h-[14px] w-[14px]" style={{ color: RED_PEN }} />
+          View Result
+        </button>
+      )}
+
+      {/* Result popup */}
+      {resultOpen && (
+        <div
+          data-testid="result-modal"
+          className="fixed inset-0 z-50 flex items-center justify-center px-3 py-6 sm:px-4"
+        >
+          {/* Backdrop */}
+          <div
+            className="sa-fade-in absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setResultOpen(false)}
+          />
+
+          {/* Paper */}
+          <div
+            className="sa-paper-in relative z-10 w-full max-w-[640px]"
+          >
+            <QuizResult
+              correct={correct}
+              total={total}
+              onRetry={handleRetryFromResult}
+              onClose={() => setResultOpen(false)}
+            />
+          </div>
+        </div>
+      )}
     </section>
   );
 };
