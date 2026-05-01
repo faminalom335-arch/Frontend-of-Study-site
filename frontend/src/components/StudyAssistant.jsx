@@ -11,6 +11,7 @@ import {
   MessageSquare,
   Settings,
   Search,
+  Menu,
   PanelLeftClose,
   PanelLeftOpen,
   Trash2,
@@ -642,7 +643,7 @@ const SettingsModal = ({
   return (
     <div
       data-testid="settings-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center px-3 py-4 sm:px-4"
     >
       {/* Backdrop */}
       <div
@@ -651,10 +652,10 @@ const SettingsModal = ({
       />
 
       {/* Panel */}
-      <div className="relative z-10 flex w-full max-w-[760px] overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_30px_80px_rgba(17,24,39,0.18)]">
-        {/* Tabs sidebar */}
-        <div className="flex w-[180px] shrink-0 flex-col border-r border-zinc-200 bg-zinc-50/60 p-3">
-          <div className="mb-3 px-2 pt-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+      <div className="relative z-10 flex max-h-[92vh] w-full max-w-[760px] flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_30px_80px_rgba(17,24,39,0.18)] sm:flex-row">
+        {/* Tabs — horizontal on mobile, vertical on desktop */}
+        <div className="flex shrink-0 gap-1 border-b border-zinc-200 bg-zinc-50/60 p-2 sm:w-[180px] sm:flex-col sm:gap-0 sm:border-b-0 sm:border-r sm:p-3">
+          <div className="hidden px-2 pt-1 pb-3 text-[11px] font-semibold uppercase tracking-wider text-zinc-500 sm:block">
             Settings
           </div>
           {SETTINGS_TABS.map((t) => {
@@ -666,7 +667,7 @@ const SettingsModal = ({
                 data-testid={`settings-tab-${t.id}`}
                 onClick={() => setTab(t.id)}
                 className={cn(
-                  "flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13px] font-medium transition-colors",
+                  "flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors sm:flex-none sm:justify-start",
                   active
                     ? "bg-black text-white"
                     : "text-zinc-700 hover:bg-zinc-100 hover:text-black"
@@ -681,7 +682,7 @@ const SettingsModal = ({
 
         {/* Content */}
         <div className="flex min-h-[420px] min-w-0 flex-1 flex-col">
-          <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
+          <div className="flex items-center justify-between border-b border-zinc-200 px-5 py-3 sm:px-6 sm:py-4">
             <h2 className="text-[15px] font-semibold text-black">
               {SETTINGS_TABS.find((t) => t.id === tab)?.label}
             </h2>
@@ -695,7 +696,7 @@ const SettingsModal = ({
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-6 py-5">
+          <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6">
             {tab === "profile" && (
               <div className="space-y-5">
                 <div>
@@ -907,7 +908,7 @@ const SettingsModal = ({
             )}
           </div>
 
-          <div className="flex items-center justify-between border-t border-zinc-200 px-6 py-3">
+          <div className="flex items-center justify-between gap-2 border-t border-zinc-200 px-5 py-3 sm:px-6">
             <span
               className={cn(
                 "text-[12px] font-medium transition-opacity",
@@ -1006,13 +1007,28 @@ const Sidebar = ({
   const recentLabel = section === "chat" ? "Recent Chats" : "Recent Quizzes";
 
   return (
-    <aside
-      data-testid="sidebar"
-      className={cn(
-        "relative h-screen shrink-0 transition-[width] duration-300 ease-out",
-        open ? "w-[280px]" : "w-[68px]"
+    <>
+      {/* Mobile backdrop — visible only on small screens when drawer is open */}
+      {open && (
+        <div
+          data-testid="sidebar-backdrop"
+          onClick={onToggle}
+          className="fixed inset-0 z-30 bg-black/30 backdrop-blur-[2px] sm:hidden"
+        />
       )}
-    >
+
+      <aside
+        data-testid="sidebar"
+        className={cn(
+          "h-screen shrink-0 transition-[width,transform] duration-300 ease-out",
+          // Mobile: fixed overlay drawer (always 280px wide, slides in/out)
+          "fixed inset-y-0 left-0 z-40 w-[280px]",
+          open ? "translate-x-0" : "-translate-x-full",
+          // Desktop: in-flow, width animates between 280 and 68
+          "sm:relative sm:translate-x-0",
+          open ? "sm:w-[280px]" : "sm:w-[68px]"
+        )}
+      >
       {/* Glass surface on white */}
       <div
         className={cn(
@@ -1175,6 +1191,7 @@ const Sidebar = ({
         </div>
       </div>
     </aside>
+    </>
   );
 };
 
@@ -1185,7 +1202,7 @@ const MCQCard = ({ q, index, selected, onSelect }) => {
   return (
     <div
       data-testid={`mcq-card-${index}`}
-      className="group relative overflow-hidden rounded-2xl border border-zinc-200 bg-white p-6 shadow-[0_1px_0_rgba(255,255,255,0.8)_inset,0_4px_20px_rgba(17,24,39,0.04)] transition-all duration-300 hover:border-zinc-300"
+      className="group relative overflow-hidden rounded-2xl border border-zinc-200 bg-white p-4 shadow-[0_1px_0_rgba(255,255,255,0.8)_inset,0_4px_20px_rgba(17,24,39,0.04)] transition-all duration-300 hover:border-zinc-300 sm:p-6"
     >
       <div className="mb-5 flex items-start gap-3">
         <div className="flex h-7 min-w-[28px] items-center justify-center rounded-md bg-black/[0.05] px-2 text-[11px] font-semibold text-black">
@@ -1294,7 +1311,7 @@ const QuizView = ({ questions, answers, onAnswer, onReset, title }) => {
   ).length;
 
   return (
-    <section className="mx-auto w-full max-w-3xl px-6 pb-32">
+    <section className="mx-auto w-full max-w-3xl px-4 pb-32 sm:px-6">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-[11px] font-medium text-zinc-700">
@@ -1359,8 +1376,7 @@ const QuizView = ({ questions, answers, onAnswer, onReset, title }) => {
 };
 
 /* ---------------- MCQ Composer (upload-focused) ---------------- */
-const MCQComposer = ({ onSubmitText, onUpload, sendOnEnter }) => {
-  const [text, setText] = useState("");
+const MCQComposer = ({ onSubmitText, onUpload, sendOnEnter }) => {  const [text, setText] = useState("");
   const [complexity, setComplexity] = useState("apply");
   const [count, setCount] = useState(5);
   const [aiAutoCount, setAiAutoCount] = useState(false);
@@ -1411,7 +1427,7 @@ const MCQComposer = ({ onSubmitText, onUpload, sendOnEnter }) => {
   };
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-6">
+    <div className="mx-auto w-full max-w-3xl px-4 sm:px-6">
       <div className="group relative rounded-2xl border border-zinc-200 bg-white/80 p-2 shadow-[0_12px_40px_rgba(17,24,39,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-2xl backdrop-saturate-150 transition-all duration-300 focus-within:border-zinc-400 focus-within:shadow-[0_16px_50px_rgba(17,24,39,0.10),inset_0_1px_0_rgba(255,255,255,1)]">
         <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-b from-white/60 to-transparent opacity-70" />
 
@@ -1512,7 +1528,7 @@ const ChatComposer = ({ onSend, model, onModelChange, sendOnEnter }) => {
   };
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-6">
+    <div className="mx-auto w-full max-w-3xl px-4 sm:px-6">
       <div className="group relative rounded-2xl border border-zinc-200 bg-white/80 p-2 shadow-[0_12px_40px_rgba(17,24,39,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-2xl backdrop-saturate-150 transition-all duration-300 focus-within:border-zinc-400 focus-within:shadow-[0_16px_50px_rgba(17,24,39,0.10),inset_0_1px_0_rgba(255,255,255,1)]">
         <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-b from-white/60 to-transparent opacity-70" />
 
@@ -1528,7 +1544,7 @@ const ChatComposer = ({ onSend, model, onModelChange, sendOnEnter }) => {
             className="block max-h-[220px] w-full resize-none bg-transparent px-4 pt-3 pb-2 text-[15px] leading-relaxed text-black placeholder:text-zinc-400 outline-none"
           />
 
-          <div className="flex items-center justify-between gap-2 px-2 pb-1 pt-1">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-2 pb-1 pt-1">
             <ModelSwitcher value={model} onChange={onModelChange} />
 
             <button
@@ -1580,7 +1596,7 @@ const ChatMessage = ({ role, content, modelName, modelProvider }) => {
       )}
       <div
         className={cn(
-          "max-w-[80%] rounded-2xl px-4 py-3 text-[14.5px] leading-relaxed",
+          "max-w-[88%] rounded-2xl px-4 py-3 text-[14.5px] leading-relaxed sm:max-w-[80%]",
           isUser
             ? "bg-black text-white"
             : "border border-zinc-200 bg-white text-zinc-800 shadow-sm"
@@ -1684,11 +1700,11 @@ const ChatHero = ({ onPick }) => {
     "Summarize the key causes of WWII",
   ];
   return (
-    <div className="mx-auto w-full max-w-3xl px-6 pb-8 pt-20 text-center md:pt-32">
-      <h1 className="mx-auto max-w-2xl text-4xl font-semibold leading-[1.1] tracking-tight text-black md:text-5xl">
+    <div className="mx-auto w-full max-w-3xl px-5 pb-8 pt-20 text-center sm:px-6 md:pt-32">
+      <h1 className="mx-auto max-w-2xl text-[28px] font-semibold leading-[1.15] tracking-tight text-black sm:text-4xl md:text-5xl">
         {headline}
       </h1>
-      <div className="mt-10 flex flex-wrap justify-center gap-2">
+      <div className="mt-8 flex flex-wrap justify-center gap-2 md:mt-10">
         {prompts.map((p) => (
           <button
             key={p}
@@ -1703,7 +1719,23 @@ const ChatHero = ({ onPick }) => {
   );
 };
 
+const MCQ_HEADLINES = [
+  "What shall we quiz on today?",
+  "Pick a topic — I'll bring the questions.",
+  "Got something to study? Drop it in.",
+  "Turn study material into mastery.",
+  "Test what you know.",
+  "What are you preparing for?",
+  "Let's build your next quiz.",
+  "Ready for a knowledge check?",
+  "Throw a topic my way.",
+  "Where shall we sharpen up?",
+];
+
 const MCQHero = () => {
+  const [headline] = useState(
+    () => MCQ_HEADLINES[Math.floor(Math.random() * MCQ_HEADLINES.length)]
+  );
   const suggestions = [
     "Quiz me on photosynthesis",
     "Python OOP fundamentals",
@@ -1711,19 +1743,11 @@ const MCQHero = () => {
     "Linear algebra basics",
   ];
   return (
-    <div className="mx-auto w-full max-w-3xl px-6 pb-8 pt-16 text-center md:pt-24">
-      <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-[11px] font-medium text-zinc-700">
-        <ListChecks className="h-3 w-3 text-amber-500" />
-        Generate MCQs from text or images
-      </div>
-      <h1 className="mx-auto max-w-2xl text-4xl font-semibold leading-[1.1] tracking-tight text-black md:text-5xl">
-        Turn any material into a quiz.
+    <div className="mx-auto w-full max-w-3xl px-5 pb-8 pt-20 text-center sm:px-6 md:pt-32">
+      <h1 className="mx-auto max-w-2xl text-[28px] font-semibold leading-[1.15] tracking-tight text-black sm:text-4xl md:text-5xl">
+        {headline}
       </h1>
-      <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-zinc-500">
-        Upload notes, paste text, or describe a topic. I'll craft multiple-choice
-        questions with detailed explanations to deepen your understanding.
-      </p>
-      <div className="mt-8 flex flex-wrap justify-center gap-2">
+      <div className="mt-8 flex flex-wrap justify-center gap-2 md:mt-10">
         {suggestions.map((s) => (
           <button
             key={s}
@@ -1771,7 +1795,11 @@ const truncateTitle = (text, max = 50) => {
 
 /* ---------------- Root ---------------- */
 export default function StudyAssistant() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Default sidebar: open on >= sm screens, closed on mobile.
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return window.innerWidth >= 640;
+  });
   const [section, setSection] = useState("chat"); // 'chat' | 'mcq'
   const [activeId, setActiveId] = useState(null);
 
@@ -1918,6 +1946,11 @@ export default function StudyAssistant() {
   };
 
   /* --- Sidebar events --- */
+  // On small screens, auto-close the drawer after the user picks an item or
+  // hits the section / new buttons so the content area is immediately visible.
+  const isMobile = () =>
+    typeof window !== "undefined" && window.innerWidth < 640;
+
   const handleSectionChange = (s) => {
     setSection(s);
     setActiveId(null);
@@ -1925,6 +1958,7 @@ export default function StudyAssistant() {
   const handleNew = () => {
     if (section === "chat") handleResetChat();
     else handleResetQuiz();
+    if (isMobile()) setSidebarOpen(false);
   };
   const handleSelect = (id) => {
     setActiveId(id);
@@ -1948,6 +1982,7 @@ export default function StudyAssistant() {
       setQuestions(DUMMY_QUIZ);
       setAnswers({});
     }
+    if (isMobile()) setSidebarOpen(false);
   };
 
   // Delete a recent item (chat or MCQ depending on section).
@@ -2020,11 +2055,23 @@ export default function StudyAssistant() {
 
         <main className="relative flex h-screen min-w-0 flex-1 flex-col">
           {/* Floating Chat / MCQ switcher — no full-width header so it won't clash with browser chrome */}
-          <div className="pointer-events-none absolute inset-x-0 top-4 z-20 flex justify-center">
+          <div className="pointer-events-none absolute inset-x-0 top-3 z-20 flex justify-center sm:top-4">
             <div className="pointer-events-auto">
               <SectionTabs section={section} onChange={handleSectionChange} />
             </div>
           </div>
+
+          {/* Mobile-only sidebar trigger — shown when drawer is closed on small screens */}
+          {!sidebarOpen && (
+            <button
+              data-testid="mobile-menu"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open sidebar"
+              className="absolute left-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 shadow-sm transition hover:border-zinc-400 hover:text-black sm:hidden"
+            >
+              <Menu className="h-[18px] w-[18px]" />
+            </button>
+          )}
 
           {/* Scroll area */}
           <div
@@ -2035,7 +2082,7 @@ export default function StudyAssistant() {
               <>
                 {!hasChat && <ChatHero onPick={handleSend} />}
                 {hasChat && (
-                  <div className="mx-auto w-full max-w-3xl space-y-5 px-6 pb-24 pt-20">
+                  <div className="mx-auto w-full max-w-3xl space-y-5 px-4 pb-24 pt-20 sm:px-6">
                     {messages.map((m, i) => (
                       <ChatMessage
                         key={i}
