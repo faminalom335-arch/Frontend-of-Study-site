@@ -1421,13 +1421,275 @@ const MCQCard = ({ q, index, selected, onSelect }) => {
   );
 };
 
+/* ---------------- Result paper (shown after all MCQs answered) ---------------- */
+const GRADE_TABLE = [
+  { min: 97, grade: "A+", remark: "Outstanding work!" },
+  { min: 93, grade: "A",  remark: "Excellent — very well done." },
+  { min: 90, grade: "A-", remark: "Great job, nearly perfect." },
+  { min: 87, grade: "B+", remark: "Strong performance." },
+  { min: 83, grade: "B",  remark: "Solid effort, keep it up." },
+  { min: 80, grade: "B-", remark: "Good attempt — a bit more to polish." },
+  { min: 77, grade: "C+", remark: "Decent, keep practicing." },
+  { min: 73, grade: "C",  remark: "Room to improve — you can do it." },
+  { min: 70, grade: "C-", remark: "Needs more review." },
+  { min: 67, grade: "D+", remark: "Revise the basics and try again." },
+  { min: 63, grade: "D",  remark: "Keep at it — review and retry." },
+  { min: 60, grade: "D-", remark: "Don't give up — practice helps." },
+  { min: 0,  grade: "F",  remark: "Review the material and try once more." },
+];
+
+const gradeFor = (pct) => GRADE_TABLE.find((g) => pct >= g.min) || GRADE_TABLE[GRADE_TABLE.length - 1];
+
+const RED_PEN = "#c42a30";
+const HAND_FONT = "'Edu VIC WA NT Beginner', 'Comic Sans MS', cursive";
+
+const QuizResult = ({ correct, total, onRetry }) => {
+  const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+  const { grade, remark } = gradeFor(pct);
+  const dateStr = new Date().toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  return (
+    <div
+      data-testid="quiz-result"
+      className="relative mb-5 overflow-hidden rounded-2xl border p-5 sm:p-7"
+      style={{
+        background:
+          "linear-gradient(180deg, #fbf4de 0%, #f4ead0 60%, #eeddb6 100%)",
+        borderColor: "#c7ad78",
+        boxShadow:
+          "inset 0 1px 0 rgba(255,255,255,0.7), 0 1px 2px rgba(90,60,20,0.06), 0 10px 28px rgba(120,85,30,0.12)",
+      }}
+    >
+      {/* Ruled lines */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.35]"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(to bottom, transparent 0, transparent 27px, rgba(139,101,45,0.18) 27px, rgba(139,101,45,0.18) 28px)",
+        }}
+      />
+      {/* Left-edge fold shadow */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 left-0 w-8"
+        style={{
+          background:
+            "linear-gradient(90deg, rgba(139,101,45,0.10), transparent)",
+        }}
+      />
+
+      {/* Top row: label + retry */}
+      <div className="relative mb-4 flex items-start justify-between">
+        <div>
+          <div
+            className="text-[11px] font-semibold uppercase tracking-[0.18em]"
+            style={{
+              color: "#8a6a10",
+              fontFamily: "'Manrope', system-ui, sans-serif",
+              fontWeight: 700,
+            }}
+          >
+            Result sheet
+          </div>
+          <div
+            className="mt-1 text-[11.5px]"
+            style={{
+              color: "#8a7348",
+              fontFamily: "'Manrope', system-ui, sans-serif",
+            }}
+          >
+            Graded on {dateStr}
+          </div>
+        </div>
+
+        <button
+          data-testid="quiz-retry"
+          onClick={onRetry}
+          className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12.5px] font-semibold transition hover:-translate-y-0.5"
+          style={{
+            borderColor: "#c7ad78",
+            background: "rgba(255,255,255,0.55)",
+            color: "#3a2f1e",
+            fontFamily: "'Manrope', system-ui, sans-serif",
+            fontWeight: 650,
+          }}
+        >
+          <RefreshCw className="h-[13px] w-[13px]" />
+          Retry
+        </button>
+      </div>
+
+      {/* Main grade row */}
+      <div className="relative flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:gap-7">
+        {/* Big grade inside hand-drawn red circle */}
+        <div className="relative flex h-[128px] w-[128px] shrink-0 items-center justify-center self-center sm:self-auto">
+          {/* Hand-drawn double ellipse */}
+          <svg
+            viewBox="0 0 128 128"
+            className="absolute inset-0"
+            aria-hidden="true"
+          >
+            <ellipse
+              cx="64"
+              cy="64"
+              rx="56"
+              ry="52"
+              fill="none"
+              stroke={RED_PEN}
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              transform="rotate(-6 64 64)"
+              style={{ opacity: 0.92 }}
+            />
+            <ellipse
+              cx="64"
+              cy="64"
+              rx="54"
+              ry="50"
+              fill="none"
+              stroke={RED_PEN}
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              transform="rotate(-2 64 64)"
+              style={{ opacity: 0.55 }}
+            />
+          </svg>
+          <span
+            data-testid="quiz-grade"
+            style={{
+              color: RED_PEN,
+              fontFamily: HAND_FONT,
+              fontWeight: 700,
+              fontSize: grade.length > 1 ? "64px" : "78px",
+              lineHeight: 1,
+              transform: "rotate(-4deg)",
+              textShadow: "0 1px 0 rgba(196,42,48,0.15)",
+            }}
+          >
+            {grade}
+          </span>
+        </div>
+
+        {/* Score + remark */}
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span
+              className="text-[13px] uppercase tracking-wider"
+              style={{
+                color: "#6b5434",
+                fontFamily: "'Manrope', system-ui, sans-serif",
+                fontWeight: 650,
+              }}
+            >
+              Score
+            </span>
+            <span
+              data-testid="quiz-score"
+              style={{
+                color: RED_PEN,
+                fontFamily: HAND_FONT,
+                fontWeight: 700,
+                fontSize: "40px",
+                lineHeight: 1,
+                transform: "rotate(-2deg)",
+                display: "inline-block",
+              }}
+            >
+              {correct}/{total}
+            </span>
+            <span
+              style={{
+                color: RED_PEN,
+                fontFamily: HAND_FONT,
+                fontWeight: 600,
+                fontSize: "24px",
+                lineHeight: 1,
+                transform: "rotate(-1deg)",
+                display: "inline-block",
+                opacity: 0.9,
+              }}
+            >
+              ({pct}%)
+            </span>
+          </div>
+
+          {/* Hand-drawn red underline under the score */}
+          <svg
+            viewBox="0 0 240 10"
+            preserveAspectRatio="none"
+            className="mt-1 h-[8px] w-[180px] max-w-full"
+            aria-hidden="true"
+          >
+            <path
+              d="M 2 6 Q 60 2, 120 5 T 238 4"
+              fill="none"
+              stroke={RED_PEN}
+              strokeWidth="2"
+              strokeLinecap="round"
+              style={{ opacity: 0.85 }}
+            />
+          </svg>
+
+          {/* Remark */}
+          <p
+            data-testid="quiz-remark"
+            className="mt-4 leading-snug"
+            style={{
+              color: RED_PEN,
+              fontFamily: HAND_FONT,
+              fontWeight: 600,
+              fontSize: "19px",
+              transform: "rotate(-0.8deg)",
+              transformOrigin: "left center",
+              display: "inline-block",
+            }}
+          >
+            {remark}
+          </p>
+
+          {/* Signature line */}
+          <div
+            className="mt-5 flex items-center justify-between gap-3"
+            style={{
+              color: "#8a7348",
+              fontFamily: "'Manrope', system-ui, sans-serif",
+            }}
+          >
+            <span className="text-[11.5px]">
+              Review your answers below ↓
+            </span>
+            <span
+              style={{
+                color: RED_PEN,
+                fontFamily: HAND_FONT,
+                fontWeight: 600,
+                fontSize: "16px",
+                transform: "rotate(-3deg)",
+                display: "inline-block",
+              }}
+            >
+              — Study AI
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /* ---------------- Quiz View ---------------- */
-const QuizView = ({ questions, answers, onAnswer, onReset, title }) => {
+const QuizView = ({ questions, answers, onAnswer, onReset, onRetry, title }) => {
   const total = questions.length;
   const answered = Object.keys(answers).length;
   const correct = Object.entries(answers).filter(
     ([idx, ans]) => questions[Number(idx)].correctAnswer === ans
   ).length;
+  const completed = total > 0 && answered === total;
 
   return (
     <section className="mx-auto w-full max-w-3xl px-4 pb-32 sm:px-6">
@@ -1480,6 +1742,9 @@ const QuizView = ({ questions, answers, onAnswer, onReset, title }) => {
       </div>
 
       <div className="space-y-4">
+        {completed && (
+          <QuizResult correct={correct} total={total} onRetry={onRetry} />
+        )}
         {questions.map((q, i) => (
           <MCQCard
             key={i}
@@ -2027,6 +2292,16 @@ export default function StudyAssistant() {
     setActiveId(null);
   };
 
+  // Retake the same quiz — keep questions, just clear answers.
+  const handleRetryQuiz = () => {
+    setAnswers({});
+    requestAnimationFrame(() => {
+      document
+        .getElementById("quiz-anchor")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+
   /* --- Chat handlers --- */
   const handleSend = (text) => {
     // Auto-create a sidebar entry for this new chat on first send
@@ -2236,6 +2511,7 @@ export default function StudyAssistant() {
                       answers={answers}
                       onAnswer={handleAnswer}
                       onReset={handleResetQuiz}
+                      onRetry={handleRetryQuiz}
                       title={activeQuizTitle || "Quiz session"}
                     />
                   </div>
