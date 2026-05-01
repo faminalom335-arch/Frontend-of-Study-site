@@ -29,10 +29,11 @@ import {
   Atom,
   SlidersHorizontal,
   Database,
-  LayoutTemplate,
-  Code2,
-  FlaskConical,
   ChevronRight,
+  Brain,
+  Target,
+  Minus,
+  Wand2,
 } from "lucide-react";
 
 /* Generic monogram glyph used as a placeholder mark (not a brand reproduction) */
@@ -126,149 +127,221 @@ const DUMMY_RECENT_MCQ = [
   { id: "m6", title: "Photosynthesis Fundamentals", date: "1 week ago" },
 ];
 
-/* ---------------- MCQ Templates (hand-curated, accurate) ---------------- */
-const MCQ_TEMPLATES = [
+/* ---------------- MCQ Generation Controls ---------------- */
+/**
+ * Complexity levels — modern, study-focused tiering inspired loosely by
+ * Bloom's taxonomy. The backend should map these IDs to its prompting strategy.
+ */
+const COMPLEXITY_LEVELS = [
   {
-    id: "tpl-js-essentials",
-    title: "JavaScript Essentials",
-    description: "Core JS quirks every developer should know.",
-    icon: Code2,
-    questions: [
-      {
-        question: "What does `typeof null` evaluate to in JavaScript?",
-        options: ["null", "undefined", "object", "boolean"],
-        correctAnswer: "object",
-        explanation:
-          "This is a long-standing JavaScript quirk. `typeof null` returns the string \"object\" because of an early implementation bug that was kept for backwards compatibility. To check for null specifically, compare with `=== null`.",
-      },
-      {
-        question: "Which method creates a NEW array with each element transformed?",
-        options: [".forEach()", ".map()", ".filter()", ".reduce()"],
-        correctAnswer: ".map()",
-        explanation:
-          "`.map()` returns a new array of the same length where each element is the result of the callback. `.forEach()` returns undefined, `.filter()` returns elements that pass a test, and `.reduce()` boils the array down to a single value.",
-      },
-      {
-        question: "What is the result of `0.1 + 0.2 === 0.3`?",
-        options: ["true", "false", "NaN", "TypeError"],
-        correctAnswer: "false",
-        explanation:
-          "Because of IEEE-754 floating-point representation, `0.1 + 0.2` is `0.30000000000000004`, not exactly `0.3`. Use `Math.abs(a - b) < Number.EPSILON` for safe equality, or work in integers (e.g. cents).",
-      },
-      {
-        question:
-          "Which keyword declares a block-scoped binding that cannot be reassigned?",
-        options: ["var", "let", "const", "static"],
-        correctAnswer: "const",
-        explanation:
-          "`const` is block-scoped and the binding cannot be reassigned. Note that the contents of objects/arrays declared with `const` can still be mutated. `let` is block-scoped but reassignable; `var` is function-scoped.",
-      },
-      {
-        question: "What does `Array.isArray([1, 2, 3])` return?",
-        options: ["\"array\"", "true", "\"object\"", "false"],
-        correctAnswer: "true",
-        explanation:
-          "`Array.isArray()` reliably checks for arrays and returns a boolean. `typeof [1,2,3]` returns \"object\", which is why this dedicated method exists.",
-      },
-    ],
+    id: "recall",
+    label: "Recall",
+    description: "Quick fact-check, definitions",
+    icon: Lightbulb,
   },
   {
-    id: "tpl-python-basics",
-    title: "Python Basics",
-    description: "Fundamentals every Python beginner should master.",
-    icon: Code2,
-    questions: [
-      {
-        question: "Which of these is a MUTABLE built-in type in Python?",
-        options: ["tuple", "str", "list", "frozenset"],
-        correctAnswer: "list",
-        explanation:
-          "Lists are mutable — you can append, replace, and remove items in place. Tuples, strings, and frozensets are all immutable; any \"change\" creates a new object.",
-      },
-      {
-        question: "What does `len(\"Hello\")` return?",
-        options: ["4", "5", "6", "It raises an error"],
-        correctAnswer: "5",
-        explanation:
-          "`len()` on a string returns the number of characters. \"Hello\" has 5 characters: H, e, l, l, o.",
-      },
-      {
-        question: "Which operator performs floor division in Python?",
-        options: ["/", "//", "%", "**"],
-        correctAnswer: "//",
-        explanation:
-          "`//` divides and rounds DOWN to the nearest integer (toward negative infinity). `/` is true division and always returns a float, `%` is modulo (remainder), `**` is exponentiation.",
-      },
-      {
-        question: "What does `list(range(5))` produce?",
-        options: [
-          "[1, 2, 3, 4, 5]",
-          "[0, 1, 2, 3, 4]",
-          "[0, 1, 2, 3, 4, 5]",
-          "[1, 2, 3, 4]",
-        ],
-        correctAnswer: "[0, 1, 2, 3, 4]",
-        explanation:
-          "`range(stop)` generates numbers from 0 up to but NOT including `stop`. So `range(5)` yields 0, 1, 2, 3, 4 — five numbers in total.",
-      },
-      {
-        question: "How do you create an empty dictionary in Python?",
-        options: ["[]", "()", "{}", "<>"],
-        correctAnswer: "{}",
-        explanation:
-          "Empty curly braces `{}` create an empty dict. `[]` is a list, `()` is a tuple. Note: `{1, 2}` with values (no colons) creates a SET, not a dict.",
-      },
-    ],
+    id: "apply",
+    label: "Apply",
+    description: "Practical use & worked scenarios",
+    icon: Zap,
   },
   {
-    id: "tpl-science-101",
-    title: "General Science 101",
-    description: "Quick recall on classic science facts.",
-    icon: FlaskConical,
-    questions: [
-      {
-        question: "What is the chemical symbol for gold?",
-        options: ["Go", "Gd", "Au", "Ag"],
-        correctAnswer: "Au",
-        explanation:
-          "\"Au\" comes from the Latin word \"aurum\" meaning gold. \"Ag\" (argentum) is silver, \"Gd\" is gadolinium, and \"Go\" is not a real element symbol.",
-      },
-      {
-        question: "How many planets are officially in our solar system today?",
-        options: ["7", "8", "9", "10"],
-        correctAnswer: "8",
-        explanation:
-          "Since the IAU's 2006 reclassification, the solar system has 8 planets: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune. Pluto is now a dwarf planet.",
-      },
-      {
-        question: "Which organelle is known as the powerhouse of the cell?",
-        options: ["Nucleus", "Ribosome", "Mitochondrion", "Golgi apparatus"],
-        correctAnswer: "Mitochondrion",
-        explanation:
-          "Mitochondria generate most of a cell's ATP via cellular respiration. The nucleus stores DNA, ribosomes synthesize proteins, and the Golgi modifies and packages molecules.",
-      },
-      {
-        question: "Approximately how fast does light travel in a vacuum?",
-        options: [
-          "300 km/s",
-          "30,000 km/s",
-          "300,000 km/s",
-          "3,000,000 km/s",
-        ],
-        correctAnswer: "300,000 km/s",
-        explanation:
-          "The speed of light in a vacuum is exactly 299,792,458 m/s — usually rounded to 300,000 km/s. It's the universal speed limit for information and matter.",
-      },
-      {
-        question: "Which gas do plants primarily absorb during photosynthesis?",
-        options: ["Oxygen", "Nitrogen", "Carbon dioxide", "Hydrogen"],
-        correctAnswer: "Carbon dioxide",
-        explanation:
-          "During photosynthesis, plants absorb CO₂ from the air and water from the soil, using sunlight to produce glucose and release O₂ as a by-product. This drives the global carbon cycle.",
-      },
-    ],
+    id: "analyze",
+    label: "Analyze",
+    description: "Break it down, compare ideas",
+    icon: Brain,
+  },
+  {
+    id: "mastery",
+    label: "Mastery",
+    description: "Exam-grade, multi-step reasoning",
+    icon: Target,
   },
 ];
+
+/* ===== BACKEND INTEGRATION NOTE — read carefully when wiring the API =====
+
+The MCQ composer collects three generation parameters and forwards them all
+to the backend on submit:
+
+  {
+    text:          string,        // the user's pasted material (or filename)
+    complexity:    "recall" | "apply" | "analyze" | "mastery",
+    count:         number,        // user-requested # of MCQs (1..50)
+    aiAutoCount:   boolean,       // if true → AI decides the optimal count
+  }
+
+Why `aiAutoCount` exists:
+  Users will sometimes ask for 20 MCQs from a 2-line paragraph. To avoid the
+  AI hallucinating filler questions, this toggle lets the user defer to the
+  model's judgment. When `aiAutoCount === true`:
+    1. The backend MUST IGNORE the `count` field entirely.
+    2. The model picks a reasonable number based on the source's depth.
+    3. The response should include the actual `count` used so the UI can
+       reflect it back to the user.
+  When `aiAutoCount === false`:
+    The backend should honor `count` exactly, but is still free to refuse /
+    warn the client if the source material is clearly insufficient.
+
+Frontend's job is purely to collect & forward these params — the backend
+is the source of truth for what gets generated.
+======================================================================= */
+
+const ComplexityPicker = ({ value, onChange }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const current = COMPLEXITY_LEVELS.find((l) => l.id === value) || COMPLEXITY_LEVELS[0];
+  const CurrentIcon = current.icon;
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        data-testid="complexity-trigger"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-[13px] font-medium text-zinc-800 transition hover:border-zinc-400 hover:bg-zinc-50"
+      >
+        <span className="flex h-5 w-5 items-center justify-center rounded-md bg-black text-white ring-1 ring-black/10">
+          <CurrentIcon className="h-3 w-3" />
+        </span>
+        <span className="hidden sm:inline">{current.label}</span>
+        <ChevronDown
+          className={cn(
+            "h-[14px] w-[14px] text-zinc-500 transition-transform",
+            open && "rotate-180"
+          )}
+        />
+      </button>
+
+      {open && (
+        <div
+          data-testid="complexity-dropdown"
+          className="absolute bottom-full left-0 z-50 mb-2 w-[300px] origin-bottom-left rounded-xl border border-zinc-200 bg-white p-1.5 shadow-[0_12px_40px_rgba(17,24,39,0.12)]"
+        >
+          <div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+            Complexity
+          </div>
+          {COMPLEXITY_LEVELS.map((lvl) => {
+            const active = lvl.id === value;
+            const Icon = lvl.icon;
+            return (
+              <button
+                key={lvl.id}
+                data-testid={`complexity-${lvl.id}`}
+                onClick={() => {
+                  onChange(lvl.id);
+                  setOpen(false);
+                }}
+                className={cn(
+                  "flex w-full items-start gap-2.5 rounded-lg px-3 py-2 text-left transition-colors",
+                  active
+                    ? "bg-black text-white"
+                    : "text-zinc-800 hover:bg-zinc-100"
+                )}
+              >
+                <span
+                  className={cn(
+                    "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ring-1",
+                    active
+                      ? "bg-white text-black ring-white/30"
+                      : "bg-black text-white ring-black/10"
+                  )}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[13px] font-semibold">
+                    {lvl.label}
+                  </div>
+                  <div
+                    className={cn(
+                      "mt-0.5 truncate text-[11.5px]",
+                      active ? "text-white/75" : "text-zinc-500"
+                    )}
+                  >
+                    {lvl.description}
+                  </div>
+                </div>
+                {active && <Check className="mt-0.5 h-4 w-4 shrink-0" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const CountStepper = ({ value, onChange, aiAuto, onToggleAiAuto, min = 1, max = 50 }) => {
+  const dec = () => onChange(Math.max(min, value - 1));
+  const inc = () => onChange(Math.min(max, value + 1));
+
+  return (
+    <div className="inline-flex items-stretch overflow-hidden rounded-lg border border-zinc-200 bg-white">
+      {/* AI Auto pill (left segment) */}
+      <button
+        data-testid="ai-auto-toggle"
+        onClick={onToggleAiAuto}
+        title={
+          aiAuto
+            ? "AI decides the optimal number of questions"
+            : "Let AI decide the number of questions"
+        }
+        className={cn(
+          "flex items-center gap-1.5 px-2.5 text-[12px] font-semibold transition-colors",
+          aiAuto
+            ? "bg-black text-white"
+            : "text-zinc-600 hover:bg-zinc-50 hover:text-black"
+        )}
+      >
+        <Wand2 className="h-[13px] w-[13px]" />
+        Auto
+      </button>
+
+      <span className="w-px bg-zinc-200" />
+
+      {/* Stepper (right segment) */}
+      <div
+        className={cn(
+          "flex items-center",
+          aiAuto && "pointer-events-none opacity-40"
+        )}
+      >
+        <button
+          data-testid="count-dec"
+          onClick={dec}
+          disabled={aiAuto || value <= min}
+          className="flex h-full w-7 items-center justify-center text-zinc-600 transition hover:bg-zinc-50 hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
+          aria-label="Decrease"
+        >
+          <Minus className="h-[13px] w-[13px]" />
+        </button>
+        <span
+          data-testid="count-value"
+          className="flex min-w-[36px] items-center justify-center px-1 text-[13px] font-semibold tabular-nums text-black"
+        >
+          {aiAuto ? "—" : value}
+        </span>
+        <button
+          data-testid="count-inc"
+          onClick={inc}
+          disabled={aiAuto || value >= max}
+          className="flex h-full w-7 items-center justify-center text-zinc-600 transition hover:bg-zinc-50 hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
+          aria-label="Increase"
+        >
+          <Plus className="h-[13px] w-[13px]" />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 /* ---------------- Settings persistence ---------------- */
 const SETTINGS_KEY = "sa.settings.v1";
@@ -871,81 +944,6 @@ const SettingsModal = ({
   );
 };
 
-/* ---------------- MCQ Template Picker ---------------- */
-const TemplatePicker = ({ onPick }) => {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        data-testid="template-picker-trigger"
-        onClick={() => setOpen((v) => !v)}
-        className="hidden items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-[13px] font-medium text-zinc-700 transition hover:border-zinc-400 hover:bg-zinc-50 hover:text-black sm:inline-flex"
-      >
-        <LayoutTemplate className="h-[15px] w-[15px]" />
-        <span>Use template</span>
-        <ChevronDown
-          className={cn(
-            "h-[14px] w-[14px] text-zinc-500 transition-transform",
-            open && "rotate-180"
-          )}
-        />
-      </button>
-
-      {open && (
-        <div
-          data-testid="template-picker-dropdown"
-          className="absolute bottom-full left-0 z-50 mb-2 w-[340px] origin-bottom-left rounded-xl border border-zinc-200 bg-white p-1.5 shadow-[0_12px_40px_rgba(17,24,39,0.12)]"
-        >
-          <div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
-            Ready-to-practice quizzes
-          </div>
-          {MCQ_TEMPLATES.map((tpl) => {
-            const Icon = tpl.icon || LayoutTemplate;
-            return (
-              <button
-                key={tpl.id}
-                data-testid={`template-${tpl.id}`}
-                onClick={() => {
-                  onPick(tpl);
-                  setOpen(false);
-                }}
-                className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-zinc-100"
-              >
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-black text-white ring-1 ring-black/10">
-                  <Icon className="h-[15px] w-[15px]" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="truncate text-[13px] font-semibold text-black">
-                      {tpl.title}
-                    </span>
-                    <span className="rounded bg-zinc-900 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-white">
-                      {tpl.questions.length} Qs
-                    </span>
-                  </div>
-                  <div className="mt-0.5 truncate text-[11.5px] text-zinc-500">
-                    {tpl.description}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-};
-
 /* ---------------- Sidebar ---------------- */
 const SectionTabs = ({ section, onChange }) => {
   const tabs = [
@@ -1193,9 +1191,17 @@ const MCQCard = ({ q, index, selected, onSelect }) => {
         <div className="flex h-7 min-w-[28px] items-center justify-center rounded-md bg-black/[0.05] px-2 text-[11px] font-semibold text-black">
           {String(index + 1).padStart(2, "0")}
         </div>
-        <h3 className="text-[15px] font-medium leading-relaxed text-black md:text-base">
+        <h3 className="flex-1 text-[15px] font-medium leading-relaxed text-black md:text-base">
           {q.question}
         </h3>
+        <span
+          data-testid={`mcq-${index}-mark`}
+          className="ml-2 inline-flex shrink-0 items-center gap-1 rounded-md border border-zinc-200 bg-white px-1.5 py-0.5 text-[10.5px] font-semibold text-zinc-700"
+          title="This question is worth 1 point"
+        >
+          <Target className="h-[10px] w-[10px]" />
+          1 pt
+        </span>
       </div>
 
       <div className="grid gap-2.5 sm:grid-cols-2">
@@ -1320,9 +1326,13 @@ const QuizView = ({ questions, answers, onAnswer, onReset, title }) => {
               {answered}/{total}
             </span>
           </span>
-          <span>
-            Correct:{" "}
-            <span className="font-semibold text-emerald-600">{correct}</span>
+          <span className="inline-flex items-center gap-1.5">
+            <Target className="h-[12px] w-[12px] text-zinc-700" />
+            Score:{" "}
+            <span className="font-semibold text-black tabular-nums">
+              {correct}
+            </span>
+            <span className="text-zinc-400">/ {total} pts</span>
           </span>
         </div>
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100">
@@ -1349,8 +1359,11 @@ const QuizView = ({ questions, answers, onAnswer, onReset, title }) => {
 };
 
 /* ---------------- MCQ Composer (upload-focused) ---------------- */
-const MCQComposer = ({ onSubmitText, onUpload, onPickTemplate, sendOnEnter }) => {
+const MCQComposer = ({ onSubmitText, onUpload, sendOnEnter }) => {
   const [text, setText] = useState("");
+  const [complexity, setComplexity] = useState("apply");
+  const [count, setCount] = useState(5);
+  const [aiAutoCount, setAiAutoCount] = useState(false);
   const fileRef = useRef(null);
   const taRef = useRef(null);
 
@@ -1363,11 +1376,28 @@ const MCQComposer = ({ onSubmitText, onUpload, onPickTemplate, sendOnEnter }) =>
     }
   };
 
+  const buildPayload = () => ({
+    text,
+    complexity,
+    count,
+    aiAutoCount,
+  });
+
   const handleSubmit = () => {
     if (text.trim().length === 0) return;
-    onSubmitText(text);
+    onSubmitText(buildPayload());
     setText("");
     if (taRef.current) taRef.current.style.height = "auto";
+  };
+
+  const handleFile = (file) => {
+    if (!file) return;
+    onUpload({
+      file,
+      complexity,
+      count,
+      aiAutoCount,
+    });
   };
 
   const handleKey = (e) => {
@@ -1397,8 +1427,8 @@ const MCQComposer = ({ onSubmitText, onUpload, onPickTemplate, sendOnEnter }) =>
             className="block max-h-[220px] w-full resize-none bg-transparent px-4 pt-3 pb-2 text-[15px] leading-relaxed text-black placeholder:text-zinc-400 outline-none"
           />
 
-          <div className="flex items-center justify-between px-2 pb-1 pt-1">
-            <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-2 pb-1 pt-1">
+            <div className="flex flex-wrap items-center gap-1.5">
               <input
                 ref={fileRef}
                 type="file"
@@ -1406,7 +1436,7 @@ const MCQComposer = ({ onSubmitText, onUpload, onPickTemplate, sendOnEnter }) =>
                 className="hidden"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
-                  if (f) onUpload(f);
+                  if (f) handleFile(f);
                 }}
               />
               <button
@@ -1415,9 +1445,15 @@ const MCQComposer = ({ onSubmitText, onUpload, onPickTemplate, sendOnEnter }) =>
                 className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-[13px] font-medium text-zinc-700 transition hover:border-zinc-400 hover:bg-zinc-50 hover:text-black"
               >
                 <Upload className="h-[15px] w-[15px]" />
-                <span>Upload PDF / Image</span>
+                <span className="hidden sm:inline">Upload</span>
               </button>
-              <TemplatePicker onPick={onPickTemplate} />
+              <ComplexityPicker value={complexity} onChange={setComplexity} />
+              <CountStepper
+                value={count}
+                onChange={setCount}
+                aiAuto={aiAutoCount}
+                onToggleAiAuto={() => setAiAutoCount((v) => !v)}
+              />
             </div>
 
             <button
@@ -1431,7 +1467,7 @@ const MCQComposer = ({ onSubmitText, onUpload, onPickTemplate, sendOnEnter }) =>
                   : "bg-black text-white shadow-[0_0_0_1px_rgba(0,0,0,0.1)] hover:bg-zinc-800 active:scale-[0.97]"
               )}
             >
-              <span>Generate MCQs</span>
+              <span>Generate{aiAutoCount ? "" : ` ${count}`} MCQ{aiAutoCount || count !== 1 ? "s" : ""}</span>
               <ArrowUp className="h-[15px] w-[15px]" />
             </button>
           </div>
@@ -1795,19 +1831,31 @@ export default function StudyAssistant() {
   }, [messages, isTyping]);
 
   /* --- MCQ handlers --- */
-  const startQuiz = (input) => {
+  // startQuiz receives a payload from MCQComposer:
+  //   { text, complexity, count, aiAutoCount }   (text submission)
+  //   { file, complexity, count, aiAutoCount }   (file upload)
+  // The dummy handler ignores these for now and just loads sample questions.
+  // When you wire the backend, forward `complexity`, `count`, and
+  // `aiAutoCount` exactly — see the BACKEND INTEGRATION NOTE near the
+  // ComplexityPicker definition for the contract.
+  const startQuiz = (payload) => {
     setQuestions(DUMMY_QUIZ);
     setAnswers({});
+
+    // Derive a friendly title for the sidebar entry
+    let title = "New MCQ session";
+    if (payload && typeof payload === "object") {
+      if (typeof payload.text === "string" && payload.text.trim()) {
+        title = truncateTitle(payload.text);
+      } else if (payload.file && payload.file.name) {
+        title = `Quiz from ${payload.file.name}`;
+      }
+    }
+    setActiveQuizTitle(title);
 
     // Auto-create a sidebar entry for this new MCQ session
     if (!activeId) {
       const newId = `m_${Date.now()}`;
-      let title = "New MCQ session";
-      if (typeof input === "string" && input.trim()) {
-        title = truncateTitle(input);
-      } else if (input && typeof input === "object" && input.name) {
-        title = `Quiz from ${input.name}`;
-      }
       setRecentMCQ((prev) => [
         { id: newId, title, date: "Just now" },
         ...prev,
@@ -1830,27 +1878,6 @@ export default function StudyAssistant() {
     setAnswers({});
     setActiveQuizTitle("");
     setActiveId(null);
-  };
-
-  // Use a curated MCQ template — loads its questions and creates a sidebar entry
-  const handleUseTemplate = (tpl) => {
-    if (!tpl || !Array.isArray(tpl.questions)) return;
-    setQuestions(tpl.questions);
-    setAnswers({});
-    setActiveQuizTitle(tpl.title);
-    if (!activeId) {
-      const newId = `m_${Date.now()}`;
-      setRecentMCQ((prev) => [
-        { id: newId, title: tpl.title, date: "Just now" },
-        ...prev,
-      ]);
-      setActiveId(newId);
-    }
-    requestAnimationFrame(() => {
-      document
-        .getElementById("quiz-anchor")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
   };
 
   /* --- Chat handlers --- */
@@ -2063,7 +2090,6 @@ export default function StudyAssistant() {
               <MCQComposer
                 onSubmitText={startQuiz}
                 onUpload={startQuiz}
-                onPickTemplate={handleUseTemplate}
                 sendOnEnter={settings.sendOnEnter}
               />
             )}
