@@ -35,6 +35,14 @@ import {
   Target,
   Minus,
   Wand2,
+  Paperclip,
+  Image as ImageIcon,
+  KeyRound,
+  Eye,
+  EyeOff,
+  AlertTriangle,
+  ExternalLink,
+  Loader2,
 } from "lucide-react";
 
 /* Generic monogram glyph used as a placeholder mark (not a brand reproduction) */
@@ -373,6 +381,96 @@ const saveSettings = (settings) => {
   }
 };
 
+/* ---------------- NanoGPT API key (stored separately per user spec) ---------------- */
+const API_KEY_STORAGE = "nanoGptApiKey";
+
+const loadApiKey = () => {
+  try {
+    return window.localStorage.getItem(API_KEY_STORAGE) || "";
+  } catch {
+    return "";
+  }
+};
+
+const saveApiKey = (value) => {
+  try {
+    if (value && value.trim().length > 0) {
+      window.localStorage.setItem(API_KEY_STORAGE, value.trim());
+    } else {
+      window.localStorage.removeItem(API_KEY_STORAGE);
+    }
+  } catch {
+    /* ignore */
+  }
+};
+
+/* ---------------- Fetch helpers for user's backend ----------------
+ * Uses relative `/api/...` paths — compatible with Next.js App Router
+ * same-origin deployment. When the frontend is served beside the
+ * backend (as the user intends), these calls route correctly.
+ */
+const API_BASE =
+  (typeof window !== "undefined" && window.__STUDY_AI_API_BASE__) || "";
+
+const buildUrl = (path) => `${API_BASE}${path}`;
+
+/** Convert a File to raw base64 (WITHOUT the `data:...;base64,` prefix). */
+const fileToBase64 = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      const commaIdx = result.indexOf(",");
+      resolve(commaIdx >= 0 ? result.slice(commaIdx + 1) : result);
+    };
+    reader.onerror = () => reject(reader.error || new Error("read failed"));
+    reader.readAsDataURL(file);
+  });
+
+/** Convert an array of File objects → Gemini-style `inlineData` parts. */
+const filesToInlineParts = async (files) => {
+  if (!files || files.length === 0) return [];
+  const parts = await Promise.all(
+    files.map(async (f) => ({
+      inlineData: {
+        data: await fileToBase64(f),
+        mimeType: f.type || "application/octet-stream",
+      },
+    }))
+  );
+  return parts;
+};
+
+/** POST a quiz generation request to the user's backend. */
+const postGenerateQuiz = async ({ text, files, modelId, apiKey }) => {
+  const res = await fetch(buildUrl("/api/generate-quiz"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text, files, modelId, apiKey }),
+  });
+
+  let data = null;
+  try {
+    data = await res.json();
+  } catch {
+    data = null;
+  }
+
+  return { status: res.status, ok: res.ok, data };
+};
+
+/** GET chat/quiz history from the user's backend. */
+const getHistory = async () => {
+  try {
+    const res = await fetch(buildUrl("/api/history"), { method: "GET" });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return Array.isArray(data) ? data : null;
+  } catch {
+    return null;
+  }
+};
+
 /* ---------------- AI Models ---------------- */
 
 // Black & white styling for provider badges (study-friendly)
@@ -592,6 +690,7 @@ const ModelSwitcher = ({ value, onChange }) => {
 /* ---------------- Settings Modal ---------------- */
 const SETTINGS_TABS = [
   { id: "profile", label: "Profile", Icon: User },
+  { id: "apikey", label: "API Key", Icon: KeyRound },
   { id: "preferences", label: "Preferences", Icon: SlidersHorizontal },
   { id: "data", label: "Data", Icon: Database },
 ];
@@ -604,19 +703,25 @@ const SettingsModal = ({
   onClearChats,
   onClearMCQ,
   onResetAll,
+  apiKey,
+  onSaveApiKey,
 }) => {
   const [tab, setTab] = useState("profile");
   const [draft, setDraft] = useState(settings);
   const [savedFlash, setSavedFlash] = useState(false);
+  const [apiKeyDraft, setApiKeyDraft] = useState(apiKey || "");
+  const [showApiKey, setShowApiKey] = useState(false);
 
   // Re-sync local draft whenever the modal is opened or settings change
   useEffect(() => {
     if (open) {
       setDraft(settings);
+      setApiKeyDraft(apiKey || "");
       setTab("profile");
       setSavedFlash(false);
+      setShowApiKey(false);
     }
-  }, [open, settings]);
+  }, [open, settings, apiKey]);
 
   // Close on ESC
   useEffect(() => {
@@ -630,15 +735,26 @@ const SettingsModal = ({
 
   if (!open) return null;
 
-  const dirty = JSON.stringify(draft) !== JSON.stringify(settings);
+  const dirty =
+    JSON.stringify(draft) !== JSON.stringify(settings) ||
+    (apiKeyDraft || "") !== (apiKey || "");
 
   const handleSave = () => {
     onSave(draft);
+    if ((apiKeyDraft || "") !== (apiKey || "")) {
+      onSaveApiKey(apiKeyDraft.trim());
+    }
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 1400);
   };
 
   const update = (patch) => setDraft((d) => ({ ...d, ...patch }));
+
+  const apiKeyMasked = apiKeyDraft
+    ? `${apiKeyDraft.slice(0, 4)}${"•".repeat(
+        Math.max(0, Math.min(24, apiKeyDraft.length - 8))
+      )}${apiKeyDraft.length > 8 ? apiKeyDraft.slice(-4) : ""}`
+    : "";
 
   return (
     <div
@@ -746,6 +862,109 @@ const SettingsModal = ({
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {tab === "apikey" && (
+              <div className="space-y-5">
+                <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50/70 p-3">
+                  <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-100 text-amber-700 ring-1 ring-amber-200">
+                    <KeyRound className="h-[14px] w-[14px]" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[13.5px] font-semibold text-amber-900">
+                      NanoGPT API Key required
+                    </div>
+                    <p className="mt-0.5 text-[12px] leading-relaxed text-amber-800/90">
+                      Your key is stored locally in this browser only (under{" "}
+                      <code className="rounded bg-amber-100 px-1 py-0.5 text-[11px] text-amber-900">
+                        nanoGptApiKey
+                      </code>
+                      ) and sent with each quiz-generation request. It never
+                      leaves your device except to your backend.
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="nano-api-key"
+                    className="mb-1.5 block text-[12px] font-semibold text-zinc-700"
+                  >
+                    NanoGPT API Key
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="nano-api-key"
+                      data-testid="settings-apikey-input"
+                      type={showApiKey ? "text" : "password"}
+                      value={apiKeyDraft}
+                      autoComplete="off"
+                      spellCheck={false}
+                      onChange={(e) => setApiKeyDraft(e.target.value)}
+                      placeholder="sk-..."
+                      className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 pr-20 font-mono text-[13px] text-black outline-none transition focus:border-zinc-500"
+                    />
+                    <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-1">
+                      <button
+                        type="button"
+                        data-testid="settings-apikey-toggle"
+                        onClick={() => setShowApiKey((v) => !v)}
+                        className="flex h-7 w-7 items-center justify-center rounded-md text-zinc-500 transition hover:bg-zinc-100 hover:text-black"
+                        aria-label={showApiKey ? "Hide key" : "Show key"}
+                      >
+                        {showApiKey ? (
+                          <EyeOff className="h-[14px] w-[14px]" />
+                        ) : (
+                          <Eye className="h-[14px] w-[14px]" />
+                        )}
+                      </button>
+                      {apiKeyDraft && (
+                        <button
+                          type="button"
+                          data-testid="settings-apikey-clear"
+                          onClick={() => setApiKeyDraft("")}
+                          className="flex h-7 w-7 items-center justify-center rounded-md text-zinc-500 transition hover:bg-red-50 hover:text-red-600"
+                          aria-label="Clear key"
+                          title="Clear key"
+                        >
+                          <Trash2 className="h-[14px] w-[14px]" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <p className="mt-1.5 text-[11.5px] text-zinc-500">
+                    {apiKeyDraft
+                      ? showApiKey
+                        ? "Full key shown — hide before sharing your screen."
+                        : `Saved: ${apiKeyMasked || "••••••"}`
+                      : "No key set. Quiz generation will return a 401 until you add one."}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-zinc-200 bg-zinc-50/60 p-3">
+                  <div className="mb-1 text-[11.5px] font-semibold uppercase tracking-wider text-zinc-500">
+                    How it's used
+                  </div>
+                  <ul className="space-y-1 text-[12px] leading-relaxed text-zinc-600">
+                    <li className="flex gap-2">
+                      <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-zinc-400" />
+                      Attached to every{" "}
+                      <code className="rounded bg-zinc-100 px-1 text-[11px] text-zinc-700">
+                        POST /api/generate-quiz
+                      </code>{" "}
+                      request body.
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-zinc-400" />
+                      Cleared instantly when you hit the trash icon.
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-zinc-400" />
+                      Never logged or synced across devices.
+                    </li>
+                  </ul>
                 </div>
               </div>
             )}
@@ -2103,10 +2322,12 @@ const MCQComposer = ({ onSubmitText, onUpload, sendOnEnter }) => {  const [text,
   );
 };
 
-/* ---------------- Chat Composer (with model switcher) ---------------- */
-const ChatComposer = ({ onSend, model, onModelChange, sendOnEnter }) => {
+/* ---------------- Chat Composer (with model switcher + file upload) ---------------- */
+const ChatComposer = ({ onSend, model, onModelChange, sendOnEnter, disabled }) => {
   const [text, setText] = useState("");
+  const [files, setFiles] = useState([]); // File[]
   const taRef = useRef(null);
+  const fileRef = useRef(null);
 
   const handleInput = (e) => {
     setText(e.target.value);
@@ -2117,11 +2338,16 @@ const ChatComposer = ({ onSend, model, onModelChange, sendOnEnter }) => {
     }
   };
 
+  const canSend =
+    !disabled && (text.trim().length > 0 || files.length > 0);
+
   const handleSubmit = () => {
-    if (text.trim().length === 0) return;
-    onSend(text);
+    if (!canSend) return;
+    onSend(text, files);
     setText("");
+    setFiles([]);
     if (taRef.current) taRef.current.style.height = "auto";
+    if (fileRef.current) fileRef.current.value = "";
   };
 
   const handleKey = (e) => {
@@ -2134,12 +2360,80 @@ const ChatComposer = ({ onSend, model, onModelChange, sendOnEnter }) => {
     }
   };
 
+  const handleFilePick = (e) => {
+    const picked = Array.from(e.target.files || []);
+    if (picked.length === 0) return;
+    // Hard cap 4 attachments, total 20MB
+    const MAX_FILES = 4;
+    const MAX_BYTES = 20 * 1024 * 1024;
+    const merged = [...files, ...picked].slice(0, MAX_FILES);
+    const totalBytes = merged.reduce((s, f) => s + (f.size || 0), 0);
+    if (totalBytes > MAX_BYTES) {
+      alert("Attachments exceed 20MB total. Please pick smaller files.");
+      return;
+    }
+    setFiles(merged);
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const removeFile = (idx) => {
+    setFiles((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const formatBytes = (n) => {
+    if (n < 1024) return `${n} B`;
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+    return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   return (
     <div className="mx-auto w-full max-w-3xl px-4 sm:px-6">
       <div className="group relative rounded-2xl border border-zinc-200 bg-white/80 p-2 shadow-[0_12px_40px_rgba(17,24,39,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-2xl backdrop-saturate-150 transition-all duration-300 focus-within:border-zinc-400 focus-within:shadow-[0_16px_50px_rgba(17,24,39,0.10),inset_0_1px_0_rgba(255,255,255,1)]">
         <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-b from-white/60 to-transparent opacity-70" />
 
         <div className="relative">
+          {/* Attached file chips */}
+          {files.length > 0 && (
+            <div
+              data-testid="chat-attachments"
+              className="flex flex-wrap gap-1.5 px-2 pb-1 pt-1"
+            >
+              {files.map((f, i) => {
+                const isImage = (f.type || "").startsWith("image/");
+                return (
+                  <div
+                    key={`${f.name}-${i}`}
+                    data-testid={`chat-attachment-${i}`}
+                    className="group/chip inline-flex max-w-[220px] items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2 py-1 text-[12px] text-zinc-700 shadow-sm"
+                  >
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-zinc-100 text-zinc-600">
+                      {isImage ? (
+                        <ImageIcon className="h-[12px] w-[12px]" />
+                      ) : (
+                        <FileText className="h-[12px] w-[12px]" />
+                      )}
+                    </span>
+                    <span className="truncate font-medium" title={f.name}>
+                      {f.name}
+                    </span>
+                    <span className="shrink-0 text-[10.5px] text-zinc-400">
+                      {formatBytes(f.size || 0)}
+                    </span>
+                    <button
+                      data-testid={`chat-attachment-remove-${i}`}
+                      onClick={() => removeFile(i)}
+                      className="ml-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded text-zinc-400 transition hover:bg-red-50 hover:text-red-600"
+                      aria-label="Remove"
+                      title="Remove"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           <textarea
             data-testid="chat-textarea"
             ref={taRef}
@@ -2147,20 +2441,39 @@ const ChatComposer = ({ onSend, model, onModelChange, sendOnEnter }) => {
             value={text}
             onChange={handleInput}
             onKeyDown={handleKey}
-            placeholder="Ask anything — start a conversation..."
+            placeholder="Ask anything — attach an image or PDF to include context..."
             className="block max-h-[220px] w-full resize-none bg-transparent px-4 pt-3 pb-2 text-[15px] leading-relaxed text-black placeholder:text-zinc-400 outline-none"
           />
 
           <div className="flex flex-wrap items-center justify-between gap-2 px-2 pb-1 pt-1">
-            <ModelSwitcher value={model} onChange={onModelChange} />
+            <div className="flex flex-wrap items-center gap-1.5">
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".pdf,image/*"
+                multiple
+                className="hidden"
+                onChange={handleFilePick}
+              />
+              <button
+                data-testid="chat-attach"
+                onClick={() => fileRef.current?.click()}
+                title="Attach image or PDF"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-[13px] font-medium text-zinc-700 transition hover:border-zinc-400 hover:bg-zinc-50 hover:text-black"
+              >
+                <Paperclip className="h-[14px] w-[14px]" />
+                <span className="hidden sm:inline">Attach</span>
+              </button>
+              <ModelSwitcher value={model} onChange={onModelChange} />
+            </div>
 
             <button
               data-testid="send-chat"
               onClick={handleSubmit}
-              disabled={text.trim().length === 0}
+              disabled={!canSend}
               className={cn(
                 "inline-flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition-all duration-200",
-                text.trim().length === 0
+                !canSend
                   ? "cursor-not-allowed bg-zinc-100 text-zinc-400"
                   : "bg-black text-white shadow-[0_0_0_1px_rgba(0,0,0,0.1)] hover:bg-zinc-800 active:scale-[0.97]"
               )}
@@ -2185,7 +2498,224 @@ const DUMMY_ASSISTANT_REPLY = (userText, modelName) =>
     120
   )}${userText.length > 120 ? "…" : ""}"\n\nLet me break it down into three parts:\n\n1. Core idea — the underlying concept and why it matters.\n2. A concrete example so it clicks intuitively.\n3. Common pitfalls to watch out for as you apply it.\n\nWant me to dive deeper on any of these, or try a worked example?`;
 
-const ChatMessage = ({ role, content, modelName, modelProvider }) => {
+/* Extract a quiz array from whatever shape the backend returned.
+ * Accepts: raw array, {questions: [...]}, {quiz: [...]}, {data: {questions: [...]}}, etc.
+ * Returns an array of QuizQuestion-ish objects, or null if nothing looks like a quiz.
+ */
+const extractQuizQuestions = (payload) => {
+  if (!payload) return null;
+  const candidates = [
+    payload,
+    payload.questions,
+    payload.quiz,
+    payload.mcqs,
+    payload.data?.questions,
+    payload.data?.quiz,
+    payload.result?.questions,
+  ];
+  for (const c of candidates) {
+    if (Array.isArray(c) && c.length > 0) {
+      const looksLikeQuiz = c.every(
+        (q) =>
+          q &&
+          typeof q === "object" &&
+          typeof q.question === "string" &&
+          Array.isArray(q.options)
+      );
+      if (looksLikeQuiz) return c;
+    }
+  }
+  return null;
+};
+
+const extractAssistantText = (payload) => {
+  if (!payload) return "";
+  if (typeof payload === "string") return payload;
+  return (
+    payload.text ||
+    payload.message ||
+    payload.response ||
+    payload.answer ||
+    payload.output ||
+    ""
+  );
+};
+
+/** Inline mini-quiz renderer used inside chat bubbles. */
+const InlineQuizBubble = ({ questions, testId = "inline-quiz" }) => {
+  const [answers, setAnswers] = useState({});
+  const [open, setOpen] = useState({}); // expanded-explanation per index
+  const total = questions.length;
+  const answered = Object.keys(answers).length;
+  const correct = questions.reduce(
+    (s, q, i) => s + (answers[i] === q.correctAnswer ? 1 : 0),
+    0
+  );
+
+  const pick = (i, opt) => {
+    if (answers[i] !== undefined) return;
+    setAnswers((p) => ({ ...p, [i]: opt }));
+    setOpen((p) => ({ ...p, [i]: true }));
+  };
+
+  return (
+    <div data-testid={testId} className="space-y-3">
+      <div className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50/70 px-3 py-2 text-[12px] text-zinc-700">
+        <ListChecks className="h-[14px] w-[14px] text-zinc-500" />
+        <span className="font-semibold">
+          {total} question{total === 1 ? "" : "s"} generated
+        </span>
+        <span className="text-zinc-400">·</span>
+        <span>
+          Answered{" "}
+          <span className="font-semibold text-black tabular-nums">
+            {answered}
+          </span>
+          /{total}
+        </span>
+        {answered > 0 && (
+          <>
+            <span className="text-zinc-400">·</span>
+            <span>
+              Correct{" "}
+              <span className="font-semibold text-emerald-700 tabular-nums">
+                {correct}
+              </span>
+              /{answered}
+            </span>
+          </>
+        )}
+      </div>
+
+      {questions.map((q, i) => {
+        const userPick = answers[i];
+        const isAnswered = userPick !== undefined;
+        const showExp = !!open[i];
+        return (
+          <div
+            key={i}
+            data-testid={`${testId}-q-${i}`}
+            className="rounded-xl border border-zinc-200 bg-white p-3"
+          >
+            <div className="mb-2 flex items-start gap-2">
+              <span className="inline-flex h-6 min-w-[26px] items-center justify-center rounded-md bg-black px-1.5 text-[11px] font-semibold text-white">
+                Q{i + 1}
+              </span>
+              <h4 className="flex-1 text-[13.5px] font-semibold leading-snug text-black">
+                {q.question}
+              </h4>
+            </div>
+            <div className="grid gap-1.5 sm:grid-cols-2">
+              {(q.options || []).map((opt, oi) => {
+                const isSelected = userPick === opt;
+                const isCorrect = opt === q.correctAnswer;
+                const showTick = isAnswered && isCorrect;
+                const showCross = isAnswered && isSelected && !isCorrect;
+                return (
+                  <button
+                    key={oi}
+                    data-testid={`${testId}-q-${i}-opt-${oi}`}
+                    disabled={isAnswered}
+                    onClick={() => pick(i, opt)}
+                    className={cn(
+                      "group/opt flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-[12.5px] transition",
+                      !isAnswered &&
+                        "border-zinc-200 bg-white hover:-translate-y-0.5 hover:border-zinc-400 hover:shadow-sm",
+                      isAnswered &&
+                        !isSelected &&
+                        !isCorrect &&
+                        "border-zinc-200 bg-white opacity-60",
+                      showTick && "border-emerald-500 bg-emerald-50/70",
+                      showCross && "border-red-400 bg-red-50/70"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "flex h-4 w-4 shrink-0 items-center justify-center rounded border-[1.5px]",
+                        showTick
+                          ? "border-emerald-600 bg-emerald-600 text-white"
+                          : showCross
+                          ? "border-red-500 bg-red-500 text-white"
+                          : "border-zinc-300 bg-white"
+                      )}
+                    >
+                      {showTick && (
+                        <Check className="h-[10px] w-[10px]" strokeWidth={3} />
+                      )}
+                      {showCross && (
+                        <X className="h-[10px] w-[10px]" strokeWidth={3} />
+                      )}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="mr-1 font-semibold text-zinc-500">
+                        {String.fromCharCode(65 + oi)}.
+                      </span>
+                      {opt}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {isAnswered && q.explanation && (
+              <div className="mt-2">
+                <button
+                  data-testid={`${testId}-q-${i}-toggle`}
+                  onClick={() => setOpen((p) => ({ ...p, [i]: !p[i] }))}
+                  className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-zinc-600 hover:text-black"
+                >
+                  <Lightbulb className="h-[12px] w-[12px]" />
+                  {showExp ? "Hide explanation" : "Show explanation"}
+                  <ChevronDown
+                    className={cn(
+                      "h-[12px] w-[12px] transition-transform",
+                      showExp && "rotate-180"
+                    )}
+                  />
+                </button>
+                {showExp && (
+                  <p className="mt-1 rounded-md bg-amber-50/70 px-2.5 py-1.5 text-[12px] leading-relaxed text-amber-900 ring-1 ring-amber-200/70">
+                    {q.explanation}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+/** Error banner rendered inline in the chat stream. */
+const ChatErrorBubble = ({ kind, message, onOpenSettings }) => (
+  <div
+    data-testid={`chat-error-${kind || "generic"}`}
+    className="flex gap-3"
+  >
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700 ring-1 ring-red-200">
+      <AlertTriangle className="h-4 w-4" />
+    </div>
+    <div className="max-w-[88%] rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-[13.5px] leading-relaxed text-red-800 sm:max-w-[80%]">
+      <div className="mb-0.5 text-[10.5px] font-semibold uppercase tracking-wider text-red-600">
+        {kind === "auth" ? "API key required" : "Request failed"}
+      </div>
+      <div>{message}</div>
+      {kind === "auth" && onOpenSettings && (
+        <button
+          data-testid="chat-error-open-settings"
+          onClick={onOpenSettings}
+          className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-red-600 px-2.5 py-1 text-[12px] font-semibold text-white transition hover:bg-red-700"
+        >
+          <KeyRound className="h-[12px] w-[12px]" />
+          Open API Key settings
+          <ExternalLink className="h-[11px] w-[11px]" />
+        </button>
+      )}
+    </div>
+  </div>
+);
+
+const ChatMessage = ({ role, content, modelName, modelProvider, files, quiz }) => {
   const isUser = role === "user";
   return (
     <div
@@ -2220,7 +2750,42 @@ const ChatMessage = ({ role, content, modelName, modelProvider }) => {
             {modelName}
           </div>
         )}
-        <div className="whitespace-pre-wrap">{content}</div>
+
+        {/* Attached file chips (for user messages) */}
+        {isUser && Array.isArray(files) && files.length > 0 && (
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {files.map((f, i) => {
+              const isImage = (f.mimeType || "").startsWith("image/");
+              return (
+                <div
+                  key={`${f.name}-${i}`}
+                  className="inline-flex max-w-[200px] items-center gap-1.5 rounded-md bg-white/15 px-2 py-1 text-[11.5px] ring-1 ring-white/20"
+                >
+                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded bg-white/20">
+                    {isImage ? (
+                      <ImageIcon className="h-[11px] w-[11px]" />
+                    ) : (
+                      <FileText className="h-[11px] w-[11px]" />
+                    )}
+                  </span>
+                  <span className="truncate" title={f.name}>
+                    {f.name}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {content && <div className="whitespace-pre-wrap">{content}</div>}
+
+        {/* Inline quiz (for assistant messages) */}
+        {!isUser && Array.isArray(quiz) && quiz.length > 0 && (
+          <div className={cn(content && "mt-3")}>
+            <InlineQuizBubble questions={quiz} testId="assistant-inline-quiz" />
+          </div>
+        )}
+
         {!isUser && (
           <div className="mt-3 flex items-center gap-1 border-t border-zinc-100 pt-2 text-zinc-400">
             <button className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-zinc-100 hover:text-zinc-700">
@@ -2417,6 +2982,13 @@ export default function StudyAssistant() {
     saveSettings(settings);
   }, [settings]);
 
+  // NanoGPT API key (stored in localStorage as `nanoGptApiKey`)
+  const [apiKey, setApiKey] = useState(() => loadApiKey());
+  const handleSaveApiKey = (next) => {
+    setApiKey(next || "");
+    saveApiKey(next || "");
+  };
+
   // Recent lists hydrated from localStorage so deletes & additions persist.
   // Falls back to dummy data on first ever load.
   const [recentChats, setRecentChats] = useState(() => {
@@ -2433,10 +3005,52 @@ export default function StudyAssistant() {
     saveRecents(recentChats, recentMCQ);
   }, [recentChats, recentMCQ]);
 
+  // Pull history from backend on mount (and whenever caller invokes it).
+  // Backend returns `[{ id, title, createdAt }]`. Map to our local shape.
+  const refreshHistory = async () => {
+    const items = await getHistory();
+    if (!items) return;
+    const formatDate = (iso) => {
+      if (!iso) return "";
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return "";
+      const now = new Date();
+      const sameDay = d.toDateString() === now.toDateString();
+      const yest = new Date(now);
+      yest.setDate(yest.getDate() - 1);
+      const isYesterday = d.toDateString() === yest.toDateString();
+      if (sameDay) return "Today";
+      if (isYesterday) return "Yesterday";
+      const days = Math.floor((now - d) / (1000 * 60 * 60 * 24));
+      if (days < 7) return `${days} days ago`;
+      return d.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+      });
+    };
+    const mapped = items.map((h) => ({
+      id: String(h.id),
+      title: h.title || "Untitled",
+      date: formatDate(h.createdAt),
+      _createdAt: h.createdAt,
+    }));
+    // Populate both chat & MCQ lists from the same source; backend can
+    // expand with a `kind` field later to split them.
+    setRecentChats(mapped);
+    setRecentMCQ(mapped);
+  };
+
+  useEffect(() => {
+    refreshHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // MCQ state
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [activeQuizTitle, setActiveQuizTitle] = useState("");
+  const [mcqLoading, setMcqLoading] = useState(false);
+  const [mcqError, setMcqError] = useState(null); // { kind, message }
 
   // Chat state
   const [messages, setMessages] = useState([]); // {role, content, model, provider}
@@ -2465,27 +3079,28 @@ export default function StudyAssistant() {
     }
   }, [messages, isTyping]);
 
-  /* --- MCQ handlers --- */
-  // startQuiz receives a payload from MCQComposer:
-  //   { text, complexity, count, aiAutoCount }   (text submission)
-  //   { file, complexity, count, aiAutoCount }   (file upload)
-  // The dummy handler ignores these for now and just loads sample questions.
-  // When you wire the backend, forward `complexity`, `count`, and
-  // `aiAutoCount` exactly — see the BACKEND INTEGRATION NOTE near the
-  // ComplexityPicker definition for the contract.
-  const startQuiz = (payload) => {
-    setQuestions(DUMMY_QUIZ);
-    setAnswers({});
+  /* --- MCQ handlers ---
+   * startQuiz(payload) wires the MCQ composer to the backend's
+   * `POST /api/generate-quiz` endpoint. Payload shapes:
+   *   { text, complexity, count, aiAutoCount }
+   *   { file, complexity, count, aiAutoCount }
+   * We pass the generation hints (complexity/count/aiAutoCount) through as
+   * structured text appended to the prompt so existing `/api/generate-quiz`
+   * contracts don't need to change.
+   */
+  const startQuiz = async (payload) => {
+    const p = payload && typeof payload === "object" ? payload : {};
+    const modelId = currentModel.id;
+    const apiKey = loadApiKey();
 
-    // Derive a friendly title for the sidebar entry
+    // Derive prompt text + file list
+    const userText = typeof p.text === "string" ? p.text.trim() : "";
+    const theFile = p.file || null;
+
+    // Friendly sidebar title
     let title = "New MCQ session";
-    if (payload && typeof payload === "object") {
-      if (typeof payload.text === "string" && payload.text.trim()) {
-        title = truncateTitle(payload.text);
-      } else if (payload.file && payload.file.name) {
-        title = `Quiz from ${payload.file.name}`;
-      }
-    }
+    if (userText) title = truncateTitle(userText);
+    else if (theFile && theFile.name) title = `Quiz from ${theFile.name}`;
     setActiveQuizTitle(title);
 
     // Auto-create a sidebar entry for this new MCQ session
@@ -2498,11 +3113,76 @@ export default function StudyAssistant() {
       setActiveId(newId);
     }
 
+    // Compose prompt with generation hints
+    const hints = [];
+    if (p.complexity) hints.push(`Complexity level: ${p.complexity}.`);
+    if (p.aiAutoCount) hints.push("Pick the optimal number of questions yourself.");
+    else if (p.count) hints.push(`Generate exactly ${p.count} MCQs.`);
+    const hintLine = hints.length > 0 ? `\n\n[${hints.join(" ")}]` : "";
+    const promptText = (userText || (theFile ? `Generate an MCQ quiz from the attached file "${theFile.name}".` : "")) + hintLine;
+
+    setQuestions([]);
+    setAnswers({});
+    setMcqError(null);
+    setMcqLoading(true);
+
     requestAnimationFrame(() => {
       document
         .getElementById("quiz-anchor")
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
+
+    try {
+      const fileParts = theFile ? await filesToInlineParts([theFile]) : [];
+      const { status, ok, data } = await postGenerateQuiz({
+        text: promptText,
+        files: fileParts,
+        modelId,
+        apiKey,
+      });
+
+      if (status === 401) {
+        setMcqError({
+          kind: "auth",
+          message:
+            "Your NanoGPT API key is missing or invalid. Please add a valid key in Settings → API Key.",
+        });
+        setMcqLoading(false);
+        return;
+      }
+
+      if (!ok) {
+        const backendMsg =
+          (data && (data.error || data.message || data.detail)) ||
+          `Request failed with status ${status}.`;
+        setMcqError({ kind: "generic", message: String(backendMsg) });
+        setMcqLoading(false);
+        return;
+      }
+
+      const quiz = extractQuizQuestions(data);
+      if (!quiz || quiz.length === 0) {
+        setMcqError({
+          kind: "generic",
+          message:
+            "The backend did not return any questions. Try rephrasing or use a richer source.",
+        });
+        setMcqLoading(false);
+        return;
+      }
+
+      setQuestions(quiz);
+      setAnswers({});
+      setMcqLoading(false);
+      refreshHistory();
+    } catch (err) {
+      setMcqError({
+        kind: "generic",
+        message:
+          "Couldn't reach the quiz server. Check that your backend is running at /api/generate-quiz.",
+      });
+      setMcqLoading(false);
+    }
   };
   const handleAnswer = (i, opt) => {
     if (answers[i] !== undefined) return;
@@ -2513,11 +3193,14 @@ export default function StudyAssistant() {
     setAnswers({});
     setActiveQuizTitle("");
     setActiveId(null);
+    setMcqError(null);
+    setMcqLoading(false);
   };
 
   // Retake the same quiz — keep questions, just clear answers.
   const handleRetryQuiz = () => {
     setAnswers({});
+    setMcqError(null);
     requestAnimationFrame(() => {
       document
         .getElementById("quiz-anchor")
@@ -2525,12 +3208,24 @@ export default function StudyAssistant() {
     });
   };
 
-  /* --- Chat handlers --- */
-  const handleSend = (text) => {
+  /* --- Chat handlers ---
+   * Signature: handleSend(text, filesArray)
+   * Wires directly to the user's backend at `POST /api/generate-quiz`.
+   * Converts attached File objects into Gemini-style inlineData parts,
+   * sends { text, files, modelId, apiKey } and gracefully handles
+   * 401 auth errors by prompting the user to open Settings → API Key.
+   */
+  const handleSend = async (text, filesArray) => {
+    const textStr = (text || "").toString();
+    const incomingFiles = Array.isArray(filesArray) ? filesArray : [];
+    if (textStr.trim().length === 0 && incomingFiles.length === 0) return;
+
     // Auto-create a sidebar entry for this new chat on first send
     if (!activeId) {
       const newId = `c_${Date.now()}`;
-      const title = truncateTitle(text);
+      const title =
+        truncateTitle(textStr) ||
+        (incomingFiles[0] ? `Chat about ${incomingFiles[0].name}` : "New chat");
       setRecentChats((prev) => [
         { id: newId, title, date: "Just now" },
         ...prev,
@@ -2538,23 +3233,104 @@ export default function StudyAssistant() {
       setActiveId(newId);
     }
 
-    const userMsg = { role: "user", content: text };
+    // Build file metadata for the rendered user bubble
+    const fileMeta = incomingFiles.map((f) => ({
+      name: f.name,
+      size: f.size,
+      mimeType: f.type || "application/octet-stream",
+    }));
+
+    const userMsg = {
+      role: "user",
+      content: textStr,
+      files: fileMeta,
+    };
     setMessages((prev) => [...prev, userMsg]);
     setIsTyping(true);
     const modelName = currentModel.name;
     const modelProvider = currentModel.provider;
-    setTimeout(() => {
+    const modelId = currentModel.id;
+
+    try {
+      // Convert File objects → Gemini inlineData parts
+      const fileParts = await filesToInlineParts(incomingFiles);
+
+      const { status, ok, data } = await postGenerateQuiz({
+        text: textStr,
+        files: fileParts,
+        modelId,
+        apiKey: loadApiKey(),
+      });
+
+      if (status === 401) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "error",
+            kind: "auth",
+            content:
+              "Your NanoGPT API key is missing or invalid. Please add a valid key in Settings → API Key to generate quizzes.",
+          },
+        ]);
+        setIsTyping(false);
+        return;
+      }
+
+      if (!ok) {
+        const backendMsg =
+          (data && (data.error || data.message || data.detail)) ||
+          `Request failed with status ${status}.`;
+        setMessages((prev) => [
+          ...prev,
+          { role: "error", kind: "generic", content: String(backendMsg) },
+        ]);
+        setIsTyping(false);
+        return;
+      }
+
+      // Success — try to extract a quiz; fall back to plain text
+      const quiz = extractQuizQuestions(data);
+      const assistantText = extractAssistantText(data);
+
+      const assistantMsg = {
+        role: "assistant",
+        content:
+          assistantText ||
+          (quiz
+            ? `Here's a ${quiz.length}-question quiz I put together for you.`
+            : ""),
+        model: modelName,
+        provider: modelProvider,
+        quiz: quiz || null,
+        raw: !quiz && !assistantText ? data : null,
+      };
+
+      // If we got neither quiz nor text, show pretty-printed JSON as fallback
+      if (!assistantText && !quiz && data) {
+        assistantMsg.content =
+          "Received a response but couldn't detect a quiz or text payload. Raw data:\n\n" +
+          "```json\n" +
+          JSON.stringify(data, null, 2) +
+          "\n```";
+      }
+
+      setMessages((prev) => [...prev, assistantMsg]);
+      setIsTyping(false);
+
+      // Refresh sidebar history from backend (non-blocking)
+      refreshHistory();
+    } catch (err) {
       setMessages((prev) => [
         ...prev,
         {
-          role: "assistant",
-          content: DUMMY_ASSISTANT_REPLY(text, modelName),
-          model: modelName,
-          provider: modelProvider,
+          role: "error",
+          kind: "generic",
+          content:
+            "Couldn't reach the quiz server. Check that your backend is running and reachable at /api/generate-quiz.",
         },
       ]);
       setIsTyping(false);
-    }, 1500);
+    }
   };
   const handleResetChat = () => {
     setMessages([]);
@@ -2704,15 +3480,26 @@ export default function StudyAssistant() {
                 )}
                 {hasChat && (
                   <div className="mx-auto w-full max-w-3xl space-y-5 px-4 pb-24 pt-20 sm:px-6">
-                    {messages.map((m, i) => (
-                      <ChatMessage
-                        key={i}
-                        role={m.role}
-                        content={m.content}
-                        modelName={m.model}
-                        modelProvider={m.provider}
-                      />
-                    ))}
+                    {messages.map((m, i) =>
+                      m.role === "error" ? (
+                        <ChatErrorBubble
+                          key={i}
+                          kind={m.kind}
+                          message={m.content}
+                          onOpenSettings={() => setSettingsOpen(true)}
+                        />
+                      ) : (
+                        <ChatMessage
+                          key={i}
+                          role={m.role}
+                          content={m.content}
+                          modelName={m.model}
+                          modelProvider={m.provider}
+                          files={m.files}
+                          quiz={m.quiz}
+                        />
+                      )
+                    )}
                     {isTyping && (
                       <TypingIndicator modelProvider={currentModel.provider} />
                     )}
@@ -2721,13 +3508,73 @@ export default function StudyAssistant() {
               </>
             ) : (
               <>
-                {!hasQuiz && (
+                {!hasQuiz && !mcqLoading && !mcqError && (
                   <div className="flex flex-1 items-center justify-center px-4 py-8">
                     <MCQHero />
                   </div>
                 )}
                 <div id="quiz-anchor" />
-                {hasQuiz && (
+                {mcqLoading && (
+                  <div
+                    data-testid="mcq-loading"
+                    className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-4 px-4 py-8 sm:px-6"
+                  >
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black text-white">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    </div>
+                    <div className="text-center">
+                      <div className="text-[14px] font-semibold text-black">
+                        Generating your quiz...
+                      </div>
+                      <div className="mt-0.5 text-[12px] text-zinc-500">
+                        Sending to {currentModel.name} — this usually takes a
+                        few seconds.
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {!mcqLoading && mcqError && (
+                  <div
+                    data-testid="mcq-error"
+                    className="mx-auto w-full max-w-3xl px-4 pt-24 sm:px-6"
+                  >
+                    <div className="flex gap-3 rounded-xl border border-red-200 bg-red-50/70 p-4">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700 ring-1 ring-red-200">
+                        <AlertTriangle className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[11px] font-semibold uppercase tracking-wider text-red-600">
+                          {mcqError.kind === "auth"
+                            ? "API key required"
+                            : "Couldn't generate quiz"}
+                        </div>
+                        <p className="mt-0.5 text-[13.5px] leading-relaxed text-red-800">
+                          {mcqError.message}
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {mcqError.kind === "auth" && (
+                            <button
+                              data-testid="mcq-error-open-settings"
+                              onClick={() => setSettingsOpen(true)}
+                              className="inline-flex items-center gap-1.5 rounded-md bg-red-600 px-2.5 py-1 text-[12px] font-semibold text-white transition hover:bg-red-700"
+                            >
+                              <KeyRound className="h-[12px] w-[12px]" />
+                              Open API Key settings
+                            </button>
+                          )}
+                          <button
+                            data-testid="mcq-error-dismiss"
+                            onClick={() => setMcqError(null)}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-red-300 bg-white px-2.5 py-1 text-[12px] font-semibold text-red-700 transition hover:bg-red-100"
+                          >
+                            Dismiss
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {hasQuiz && !mcqLoading && (
                   <div className="pt-20">
                     <QuizView
                       questions={questions}
@@ -2758,6 +3605,7 @@ export default function StudyAssistant() {
                 model={model}
                 onModelChange={setModel}
                 sendOnEnter={settings.sendOnEnter}
+                disabled={isTyping}
               />
             ) : (
               <MCQComposer
@@ -2779,6 +3627,8 @@ export default function StudyAssistant() {
         onClearChats={handleClearAllChats}
         onClearMCQ={handleClearAllMCQ}
         onResetAll={handleResetAll}
+        apiKey={apiKey}
+        onSaveApiKey={handleSaveApiKey}
       />
     </div>
   );
