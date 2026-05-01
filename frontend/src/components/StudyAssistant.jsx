@@ -1002,7 +1002,29 @@ const TypingIndicator = ({ modelProvider }) => (
 );
 
 /* ---------------- Hero (per section) ---------------- */
+const CHAT_HEADLINES = [
+  "What shall we explore today?",
+  "Where shall we begin?",
+  "What's on your mind?",
+  "Got a question? I've got time.",
+  "Ready when you are.",
+  "Let's figure something out.",
+  "What are you curious about?",
+  "Pick a topic — I'll dig in.",
+  "Tell me what you're learning.",
+  "Got a problem to crack?",
+  "What's puzzling you today?",
+  "Let's chase a thought.",
+  "Ask me anything.",
+  "What's the spark?",
+  "Throw an idea my way.",
+];
+
 const ChatHero = ({ onPick }) => {
+  // Pick a fresh headline per mount/refresh
+  const [headline] = useState(
+    () => CHAT_HEADLINES[Math.floor(Math.random() * CHAT_HEADLINES.length)]
+  );
   const prompts = [
     "Explain quantum entanglement simply",
     "Help me draft an email to my professor",
@@ -1010,19 +1032,11 @@ const ChatHero = ({ onPick }) => {
     "Summarize the key causes of WWII",
   ];
   return (
-    <div className="mx-auto w-full max-w-3xl px-6 pb-8 pt-16 text-center md:pt-24">
-      <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-[11px] font-medium text-zinc-700">
-        <Sparkles className="h-3 w-3 text-amber-500" />
-        Chat with top AI models
-      </div>
+    <div className="mx-auto w-full max-w-3xl px-6 pb-8 pt-20 text-center md:pt-32">
       <h1 className="mx-auto max-w-2xl text-4xl font-semibold leading-[1.1] tracking-tight text-black md:text-5xl">
-        How can I help you today?
+        {headline}
       </h1>
-      <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-zinc-500">
-        Start a conversation. Pick your favorite model — Gemini, Claude, GPT, or
-        Kimi — and get thoughtful answers in seconds.
-      </p>
-      <div className="mt-8 flex flex-wrap justify-center gap-2">
+      <div className="mt-10 flex flex-wrap justify-center gap-2">
         {prompts.map((p) => (
           <button
             key={p}
@@ -1071,15 +1085,59 @@ const MCQHero = () => {
   );
 };
 
+/* ---------------- Persistence helpers (localStorage) ---------------- */
+const STORAGE_KEY = "sa.recents.v1";
+
+const loadRecents = () => {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const saveRecents = (chats, mcq) => {
+  try {
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ chats, mcq })
+    );
+  } catch {
+    /* ignore quota / privacy errors */
+  }
+};
+
+const truncateTitle = (text, max = 50) => {
+  const t = String(text || "").trim();
+  if (!t) return "New conversation";
+  return t.length > max ? t.slice(0, max).trimEnd() + "…" : t;
+};
+
 /* ---------------- Root ---------------- */
 export default function StudyAssistant() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [section, setSection] = useState("chat"); // 'chat' | 'mcq'
   const [activeId, setActiveId] = useState(null);
 
-  // Recent lists (lifted to state so we can delete)
-  const [recentChats, setRecentChats] = useState(DUMMY_RECENT_CHATS);
-  const [recentMCQ, setRecentMCQ] = useState(DUMMY_RECENT_MCQ);
+  // Recent lists hydrated from localStorage so deletes & additions persist.
+  // Falls back to dummy data on first ever load.
+  const [recentChats, setRecentChats] = useState(() => {
+    const saved = loadRecents();
+    return saved && Array.isArray(saved.chats) ? saved.chats : DUMMY_RECENT_CHATS;
+  });
+  const [recentMCQ, setRecentMCQ] = useState(() => {
+    const saved = loadRecents();
+    return saved && Array.isArray(saved.mcq) ? saved.mcq : DUMMY_RECENT_MCQ;
+  });
+
+  // Persist whenever the recent lists change.
+  useEffect(() => {
+    saveRecents(recentChats, recentMCQ);
+  }, [recentChats, recentMCQ]);
 
   // MCQ state
   const [questions, setQuestions] = useState([]);
@@ -1101,10 +1159,26 @@ export default function StudyAssistant() {
   }, [messages, isTyping]);
 
   /* --- MCQ handlers --- */
-  const startQuiz = () => {
+  const startQuiz = (input) => {
     setQuestions(DUMMY_QUIZ);
     setAnswers({});
-    setActiveId("m1");
+
+    // Auto-create a sidebar entry for this new MCQ session
+    if (!activeId) {
+      const newId = `m_${Date.now()}`;
+      let title = "New MCQ session";
+      if (typeof input === "string" && input.trim()) {
+        title = truncateTitle(input);
+      } else if (input && typeof input === "object" && input.name) {
+        title = `Quiz from ${input.name}`;
+      }
+      setRecentMCQ((prev) => [
+        { id: newId, title, date: "Just now" },
+        ...prev,
+      ]);
+      setActiveId(newId);
+    }
+
     requestAnimationFrame(() => {
       document
         .getElementById("quiz-anchor")
@@ -1123,6 +1197,17 @@ export default function StudyAssistant() {
 
   /* --- Chat handlers --- */
   const handleSend = (text) => {
+    // Auto-create a sidebar entry for this new chat on first send
+    if (!activeId) {
+      const newId = `c_${Date.now()}`;
+      const title = truncateTitle(text);
+      setRecentChats((prev) => [
+        { id: newId, title, date: "Just now" },
+        ...prev,
+      ]);
+      setActiveId(newId);
+    }
+
     const userMsg = { role: "user", content: text };
     setMessages((prev) => [...prev, userMsg]);
     setIsTyping(true);
