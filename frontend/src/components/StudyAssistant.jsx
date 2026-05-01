@@ -1195,25 +1195,67 @@ const Sidebar = ({
   );
 };
 
-/* ---------------- MCQ Card ---------------- */
+/* ---------------- MCQ Card (paper style) ---------------- */
 const MCQCard = ({ q, index, selected, onSelect }) => {
   const answered = selected !== null && selected !== undefined;
 
   return (
     <div
       data-testid={`mcq-card-${index}`}
-      className="group relative overflow-hidden rounded-2xl border border-zinc-200 bg-white p-4 shadow-[0_1px_0_rgba(255,255,255,0.8)_inset,0_4px_20px_rgba(17,24,39,0.04)] transition-all duration-300 hover:border-zinc-300 sm:p-6"
+      className="group relative overflow-hidden rounded-2xl border p-4 transition-all duration-300 sm:p-6"
+      style={{
+        background:
+          "linear-gradient(180deg, #fbf4de 0%, #f4ead0 60%, #eeddb6 100%)",
+        borderColor: "#c7ad78",
+        boxShadow:
+          "inset 0 1px 0 rgba(255,255,255,0.7), 0 1px 2px rgba(90,60,20,0.06), 0 10px 28px rgba(120,85,30,0.10)",
+      }}
     >
-      <div className="mb-5 flex items-start gap-3">
-        <div className="flex h-7 min-w-[28px] items-center justify-center rounded-md bg-black/[0.05] px-2 text-[11px] font-semibold text-black">
-          {String(index + 1).padStart(2, "0")}
+      {/* Faint ruled lines — mimics exam paper */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.35]"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(to bottom, transparent 0, transparent 27px, rgba(139,101,45,0.18) 27px, rgba(139,101,45,0.18) 28px)",
+        }}
+      />
+      {/* Warm inner glow on the left edge — like a paper fold shadow */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 left-0 w-8"
+        style={{
+          background:
+            "linear-gradient(90deg, rgba(139,101,45,0.10), transparent)",
+        }}
+      />
+
+      {/* Question header */}
+      <div className="relative mb-5 flex items-start gap-3">
+        <div
+          className="flex h-8 min-w-[32px] shrink-0 items-center justify-center rounded-md px-2 text-[12px] font-semibold"
+          style={{
+            background: "#2a2218",
+            color: "#fbf4de",
+            boxShadow: "0 1px 0 rgba(255,255,255,0.15) inset",
+          }}
+        >
+          Q{index + 1}
         </div>
-        <h3 className="flex-1 text-[15px] font-medium leading-relaxed text-black md:text-base">
+        <h3
+          className="flex-1 text-[15px] font-semibold leading-relaxed md:text-base"
+          style={{ color: "#2a2218", fontFamily: "Georgia, 'Times New Roman', serif" }}
+        >
           {q.question}
         </h3>
         <span
           data-testid={`mcq-${index}-mark`}
-          className="ml-2 inline-flex shrink-0 items-center gap-1 rounded-md border border-zinc-200 bg-white px-1.5 py-0.5 text-[10.5px] font-semibold text-zinc-700"
+          className="ml-2 inline-flex shrink-0 items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10.5px] font-semibold"
+          style={{
+            background: "#fff9e8",
+            borderColor: "#c7ad78",
+            color: "#6b5434",
+          }}
           title="This question is worth 1 point"
         >
           <Target className="h-[10px] w-[10px]" />
@@ -1221,12 +1263,18 @@ const MCQCard = ({ q, index, selected, onSelect }) => {
         </span>
       </div>
 
-      <div className="grid gap-2.5 sm:grid-cols-2">
+      {/* Options */}
+      <div className="relative grid gap-2 sm:grid-cols-2">
         {q.options.map((opt, i) => {
           const isSelected = selected === opt;
           const isCorrect = opt === q.correctAnswer;
-          const showCorrect = answered && isCorrect;
-          const showIncorrect = answered && isSelected && !isCorrect;
+          // Tick-box states:
+          //   - unanswered             → empty box
+          //   - user picked & correct  → black tick
+          //   - user picked & wrong    → red cross
+          //   - user picked wrong AND this is the right one → auto black tick
+          const showTick = answered && isCorrect; // correct answer always gets a tick once answered
+          const showCross = answered && isSelected && !isCorrect;
 
           return (
             <button
@@ -1235,45 +1283,79 @@ const MCQCard = ({ q, index, selected, onSelect }) => {
               disabled={answered}
               onClick={() => onSelect(opt)}
               className={cn(
-                "group/opt relative flex items-center gap-3 overflow-hidden rounded-xl border px-4 py-3 text-left text-sm transition-all duration-300",
+                "group/opt relative flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left text-[13.5px] transition-all duration-200",
                 !answered &&
-                  "border-zinc-200 bg-white text-black hover:-translate-y-0.5 hover:border-zinc-400 hover:bg-zinc-50",
-                showCorrect &&
-                  "border-emerald-500/60 bg-emerald-50 text-emerald-800 shadow-[0_0_0_1px_rgba(16,185,129,0.2)]",
-                showIncorrect &&
-                  "border-red-500/60 bg-red-50 text-red-800 shadow-[0_0_0_1px_rgba(239,68,68,0.2)]",
-                answered && !isSelected && !isCorrect && "opacity-50"
+                  "hover:-translate-y-0.5 hover:shadow-[0_2px_6px_rgba(120,85,30,0.15)]",
+                answered && !isSelected && !isCorrect && "opacity-55"
               )}
+              style={{
+                borderColor: showCross
+                  ? "#b23939"
+                  : showTick
+                  ? "#2a2218"
+                  : "rgba(139,101,45,0.35)",
+                background: showCross
+                  ? "rgba(223,92,92,0.08)"
+                  : showTick
+                  ? "rgba(255,255,255,0.55)"
+                  : "rgba(255,255,255,0.35)",
+                color: "#2a2218",
+                fontFamily: "Georgia, 'Times New Roman', serif",
+              }}
             >
+              {/* Tick-box */}
               <div
                 className={cn(
-                  "flex h-6 w-6 shrink-0 items-center justify-center rounded-md border text-[11px] font-semibold transition-colors",
-                  !answered &&
-                    "border-zinc-300 bg-white text-zinc-600 group-hover/opt:border-zinc-500 group-hover/opt:text-black",
-                  showCorrect &&
-                    "border-emerald-500/60 bg-emerald-500/15 text-emerald-700",
-                  showIncorrect &&
-                    "border-red-500/60 bg-red-500/15 text-red-700",
-                  answered && !isSelected && !isCorrect && "border-zinc-200"
+                  "flex h-5 w-5 shrink-0 items-center justify-center rounded-[3px] border-[1.5px] transition-colors"
                 )}
+                style={{
+                  borderColor: showCross
+                    ? "#b23939"
+                    : showTick
+                    ? "#2a2218"
+                    : "#8a7348",
+                  background: showTick
+                    ? "#fbf4de"
+                    : showCross
+                    ? "#fff"
+                    : "rgba(255,255,255,0.6)",
+                }}
               >
-                {showCorrect ? (
-                  <Check className="h-3.5 w-3.5" />
-                ) : showIncorrect ? (
-                  <X className="h-3.5 w-3.5" />
-                ) : (
-                  String.fromCharCode(65 + i)
+                {showTick && (
+                  <Check
+                    className="h-[14px] w-[14px]"
+                    strokeWidth={3}
+                    style={{ color: "#2a2218" }}
+                  />
+                )}
+                {showCross && (
+                  <X
+                    className="h-[14px] w-[14px]"
+                    strokeWidth={3}
+                    style={{ color: "#b23939" }}
+                  />
                 )}
               </div>
-              <span className="flex-1">{opt}</span>
+
+              {/* Option letter + text */}
+              <span className="flex-1 leading-snug">
+                <span
+                  className="mr-1.5 font-semibold"
+                  style={{ color: "#6b5434" }}
+                >
+                  {String.fromCharCode(65 + i)}.
+                </span>
+                {opt}
+              </span>
             </button>
           );
         })}
       </div>
 
+      {/* Explanation */}
       <div
         className={cn(
-          "grid overflow-hidden transition-all duration-500 ease-out",
+          "relative grid overflow-hidden transition-all duration-500 ease-out",
           answered
             ? "mt-5 grid-rows-[1fr] opacity-100"
             : "mt-0 grid-rows-[0fr] opacity-0"
@@ -1282,16 +1364,36 @@ const MCQCard = ({ q, index, selected, onSelect }) => {
         <div className="min-h-0">
           <div
             data-testid={`mcq-${index}-explanation`}
-            className="flex gap-3 rounded-xl border border-amber-200 bg-amber-50/70 p-4"
+            className="flex gap-3 rounded-xl border p-4"
+            style={{
+              background: "rgba(255,249,220,0.75)",
+              borderColor: "#c7ad78",
+            }}
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 ring-1 ring-amber-500/30">
+            <div
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+              style={{
+                background: "rgba(234,179,8,0.18)",
+                color: "#8a6a10",
+                boxShadow: "inset 0 0 0 1px rgba(234,179,8,0.35)",
+              }}
+            >
               <Lightbulb className="h-4 w-4" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-amber-700">
+              <div
+                className="mb-1 text-[11px] font-semibold uppercase tracking-wider"
+                style={{ color: "#8a6a10" }}
+              >
                 Explanation
               </div>
-              <p className="text-[13.5px] leading-relaxed text-zinc-800">
+              <p
+                className="text-[13.5px] leading-relaxed"
+                style={{
+                  color: "#3a2f1e",
+                  fontFamily: "Georgia, 'Times New Roman', serif",
+                }}
+              >
                 {q.explanation}
               </p>
             </div>
