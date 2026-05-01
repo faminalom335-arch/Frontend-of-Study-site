@@ -11,7 +11,6 @@ import {
   MessageSquare,
   Settings,
   Search,
-  Menu,
   PanelLeftClose,
   PanelLeftOpen,
   Trash2,
@@ -1317,15 +1316,6 @@ export default function StudyAssistant() {
               <SectionTabs section={section} onChange={handleSectionChange} />
             </div>
           </div>
-
-          {/* Mobile sidebar toggle (floating, top-left) */}
-          <button
-            onClick={() => setSidebarOpen((v) => !v)}
-            className="pointer-events-auto absolute left-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-600 shadow-sm transition hover:border-zinc-400 hover:text-black md:hidden"
-            aria-label="Menu"
-          >
-            <Menu className="h-[18px] w-[18px]" />
-          </button>
 
           {/* Scroll area */}
           <div
