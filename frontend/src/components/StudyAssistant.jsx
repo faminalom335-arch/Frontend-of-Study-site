@@ -1243,8 +1243,13 @@ const MCQCard = ({ q, index, selected, onSelect }) => {
           Q{index + 1}
         </div>
         <h3
-          className="flex-1 text-[15px] font-semibold leading-relaxed md:text-base"
-          style={{ color: "#2a2218", fontFamily: "Georgia, 'Times New Roman', serif" }}
+          className="flex-1 text-[15px] leading-relaxed md:text-[17px]"
+          style={{
+            color: "#2a2218",
+            fontFamily: "'Manrope', system-ui, sans-serif",
+            fontWeight: 650,
+            letterSpacing: "-0.005em",
+          }}
         >
           {q.question}
         </h3>
@@ -1300,7 +1305,10 @@ const MCQCard = ({ q, index, selected, onSelect }) => {
                   ? "rgba(255,255,255,0.55)"
                   : "rgba(255,255,255,0.35)",
                 color: "#2a2218",
-                fontFamily: "Georgia, 'Times New Roman', serif",
+                fontFamily: "'Edu VIC WA NT Beginner', 'Comic Sans MS', cursive",
+                fontWeight: 500,
+                fontSize: "15px",
+                lineHeight: "1.4",
               }}
             >
               {/* Tick-box */}
@@ -1341,7 +1349,11 @@ const MCQCard = ({ q, index, selected, onSelect }) => {
               <span className="flex-1 leading-snug">
                 <span
                   className="mr-1.5 font-semibold"
-                  style={{ color: "#6b5434" }}
+                  style={{
+                    color: "#6b5434",
+                    fontFamily: "'Manrope', system-ui, sans-serif",
+                    fontWeight: 650,
+                  }}
                 >
                   {String.fromCharCode(65 + i)}.
                 </span>
@@ -1383,7 +1395,11 @@ const MCQCard = ({ q, index, selected, onSelect }) => {
             <div className="min-w-0 flex-1">
               <div
                 className="mb-1 text-[11px] font-semibold uppercase tracking-wider"
-                style={{ color: "#8a6a10" }}
+                style={{
+                  color: "#8a6a10",
+                  fontFamily: "'Manrope', system-ui, sans-serif",
+                  fontWeight: 700,
+                }}
               >
                 Explanation
               </div>
@@ -1391,7 +1407,8 @@ const MCQCard = ({ q, index, selected, onSelect }) => {
                 className="text-[13.5px] leading-relaxed"
                 style={{
                   color: "#3a2f1e",
-                  fontFamily: "Georgia, 'Times New Roman', serif",
+                  fontFamily: "'Manrope', system-ui, sans-serif",
+                  fontWeight: 500,
                 }}
               >
                 {q.explanation}
