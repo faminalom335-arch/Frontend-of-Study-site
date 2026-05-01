@@ -1700,7 +1700,7 @@ const ChatHero = ({ onPick }) => {
     "Summarize the key causes of WWII",
   ];
   return (
-    <div className="mx-auto w-full max-w-3xl px-5 pb-8 pt-20 text-center sm:px-6 md:pt-32">
+    <div className="mx-auto w-full max-w-3xl px-5 py-8 text-center sm:px-6">
       <h1 className="mx-auto max-w-2xl text-[28px] font-semibold leading-[1.15] tracking-tight text-black sm:text-4xl md:text-5xl">
         {headline}
       </h1>
@@ -1743,7 +1743,7 @@ const MCQHero = () => {
     "Linear algebra basics",
   ];
   return (
-    <div className="mx-auto w-full max-w-3xl px-5 pb-8 pt-20 text-center sm:px-6 md:pt-32">
+    <div className="mx-auto w-full max-w-3xl px-5 py-8 text-center sm:px-6">
       <h1 className="mx-auto max-w-2xl text-[28px] font-semibold leading-[1.15] tracking-tight text-black sm:text-4xl md:text-5xl">
         {headline}
       </h1>
@@ -2076,11 +2076,15 @@ export default function StudyAssistant() {
           {/* Scroll area */}
           <div
             ref={chatScrollRef}
-            className="relative flex-1 overflow-y-auto"
+            className="relative flex flex-1 flex-col overflow-y-auto"
           >
             {section === "chat" ? (
               <>
-                {!hasChat && <ChatHero onPick={handleSend} />}
+                {!hasChat && (
+                  <div className="flex flex-1 items-center justify-center px-4 py-8">
+                    <ChatHero onPick={handleSend} />
+                  </div>
+                )}
                 {hasChat && (
                   <div className="mx-auto w-full max-w-3xl space-y-5 px-4 pb-24 pt-20 sm:px-6">
                     {messages.map((m, i) => (
@@ -2100,7 +2104,11 @@ export default function StudyAssistant() {
               </>
             ) : (
               <>
-                {!hasQuiz && <MCQHero />}
+                {!hasQuiz && (
+                  <div className="flex flex-1 items-center justify-center px-4 py-8">
+                    <MCQHero />
+                  </div>
+                )}
                 <div id="quiz-anchor" />
                 {hasQuiz && (
                   <div className="pt-20">
