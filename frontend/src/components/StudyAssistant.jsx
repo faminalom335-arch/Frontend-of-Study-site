@@ -1443,7 +1443,35 @@ const gradeFor = (pct) => GRADE_TABLE.find((g) => pct >= g.min) || GRADE_TABLE[G
 const RED_PEN = "#c42a30";
 const HAND_FONT = "'Edu VIC WA NT Beginner', 'Comic Sans MS', cursive";
 
-const QuizResult = ({ correct, total, onRetry, onClose }) => {
+/* ---------- Best-score memory (per quiz) ----------
+ * Stored in localStorage under `sa.bestscores.v1`. Keyed by quiz title + total
+ * so different quizzes never collide. Backend can replace this with a real
+ * per-user leaderboard later — the public shape is preserved.
+ */
+const BEST_SCORES_KEY = "sa.bestscores.v1";
+
+const loadBestScores = () => {
+  try {
+    const raw = window.localStorage.getItem(BEST_SCORES_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+
+const saveBestScores = (obj) => {
+  try {
+    window.localStorage.setItem(BEST_SCORES_KEY, JSON.stringify(obj));
+  } catch {
+    /* ignore */
+  }
+};
+
+const quizKeyOf = (title, total) => `${(title || "quiz").trim()}::${total}`;
+
+const QuizResult = ({ correct, total, onRetry, onClose, title }) => {
   const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
   const { grade, remark } = gradeFor(pct);
   const dateStr = new Date().toLocaleDateString(undefined, {
@@ -1451,6 +1479,52 @@ const QuizResult = ({ correct, total, onRetry, onClose }) => {
     day: "numeric",
     year: "numeric",
   });
+
+  /* Compare against prior best & persist. Computed once per popup mount.
+   * Guarded with a ref so React 18 StrictMode's double effect-invoke in dev
+   * doesn't double-count attempts or clobber the comparison. */
+  const [compare, setCompare] = useState(null);
+  const persistedRef = useRef(false);
+  useEffect(() => {
+    if (persistedRef.current) return;
+    persistedRef.current = true;
+
+    const all = loadBestScores();
+    const key = quizKeyOf(title, total);
+    const prior = all[key];
+    const attemptsNow = (prior?.attempts || 0) + 1;
+
+    let status;
+    if (!prior) status = "first";
+    else if (correct > prior.bestCorrect) status = "new-best";
+    else if (correct === prior.bestCorrect) status = "matched";
+    else status = "below";
+
+    setCompare({
+      status,
+      attempts: attemptsNow,
+      priorBest: prior
+        ? {
+            bestCorrect: prior.bestCorrect,
+            bestGrade: prior.bestGrade,
+            bestPct: prior.bestPct,
+          }
+        : null,
+      delta: prior ? correct - prior.bestCorrect : null,
+    });
+
+    // Persist: keep the best-ever, but always increment attempts
+    const shouldUpdateBest = !prior || correct > prior.bestCorrect;
+    all[key] = {
+      bestCorrect: shouldUpdateBest ? correct : prior.bestCorrect,
+      bestPct: shouldUpdateBest ? pct : prior.bestPct,
+      bestGrade: shouldUpdateBest ? grade : prior.bestGrade,
+      attempts: attemptsNow,
+      lastAt: new Date().toISOString(),
+    };
+    saveBestScores(all);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div
@@ -1482,6 +1556,30 @@ const QuizResult = ({ correct, total, onRetry, onClose }) => {
             "linear-gradient(90deg, rgba(139,101,45,0.10), transparent)",
         }}
       />
+
+      {/* New-best stamp (corner sticker style) */}
+      {compare?.status === "new-best" && (
+        <div
+          data-testid="new-best-stamp"
+          className="sa-stamp-in pointer-events-none absolute right-3 top-3 z-10 sm:right-4 sm:top-4"
+        >
+          <div
+            className="flex flex-col items-center justify-center rounded-full px-3 py-2 text-center"
+            style={{
+              border: `2.5px solid ${RED_PEN}`,
+              color: RED_PEN,
+              background: "rgba(255,249,220,0.92)",
+              fontFamily: HAND_FONT,
+              fontWeight: 700,
+              lineHeight: 1,
+              boxShadow: "0 4px 12px rgba(196,42,48,0.22)",
+            }}
+          >
+            <span style={{ fontSize: "11px", letterSpacing: "0.1em" }}>★ NEW ★</span>
+            <span style={{ fontSize: "18px", marginTop: 2 }}>BEST!</span>
+          </div>
+        </div>
+      )}
 
       {/* Top row: label + retry */}
       <div className="relative mb-4 flex items-start justify-between">
@@ -1669,6 +1767,41 @@ const QuizResult = ({ correct, total, onRetry, onClose }) => {
             {remark}
           </p>
 
+          {/* Best-score comparison note (red pen) */}
+          {compare && (
+            <div
+              data-testid="quiz-compare"
+              className="mt-3 flex items-center gap-2"
+              style={{
+                color: RED_PEN,
+                fontFamily: HAND_FONT,
+                fontWeight: 600,
+                fontSize: "15px",
+              }}
+            >
+              {compare.status === "first" && (
+                <span style={{ transform: "rotate(-0.5deg)", display: "inline-block" }}>
+                  First attempt — setting your benchmark.
+                </span>
+              )}
+              {compare.status === "new-best" && (
+                <span style={{ transform: "rotate(-0.5deg)", display: "inline-block" }}>
+                  New best! <span style={{ fontWeight: 700 }}>+{compare.delta}</span> from your last best · Attempt #{compare.attempts}
+                </span>
+              )}
+              {compare.status === "matched" && (
+                <span style={{ transform: "rotate(-0.5deg)", display: "inline-block" }}>
+                  = Matched your best · Attempt #{compare.attempts}
+                </span>
+              )}
+              {compare.status === "below" && (
+                <span style={{ transform: "rotate(-0.5deg)", display: "inline-block" }}>
+                  Prev best: {compare.priorBest.bestCorrect}/{total} ({compare.priorBest.bestGrade}) · Attempt #{compare.attempts}
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Signature line */}
           <div
             className="mt-5 flex items-center justify-between gap-3"
@@ -1840,6 +1973,7 @@ const QuizView = ({ questions, answers, onAnswer, onReset, onRetry, title }) => 
               total={total}
               onRetry={handleRetryFromResult}
               onClose={() => setResultOpen(false)}
+              title={title}
             />
           </div>
         </div>
