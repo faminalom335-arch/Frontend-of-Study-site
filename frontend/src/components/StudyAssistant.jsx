@@ -27,6 +27,12 @@ import {
   Gem,
   Asterisk,
   Atom,
+  SlidersHorizontal,
+  Database,
+  LayoutTemplate,
+  Code2,
+  FlaskConical,
+  ChevronRight,
 } from "lucide-react";
 
 /* Generic monogram glyph used as a placeholder mark (not a brand reproduction) */
@@ -119,6 +125,179 @@ const DUMMY_RECENT_MCQ = [
   { id: "m5", title: "World War II Key Events", date: "2 days ago" },
   { id: "m6", title: "Photosynthesis Fundamentals", date: "1 week ago" },
 ];
+
+/* ---------------- MCQ Templates (hand-curated, accurate) ---------------- */
+const MCQ_TEMPLATES = [
+  {
+    id: "tpl-js-essentials",
+    title: "JavaScript Essentials",
+    description: "Core JS quirks every developer should know.",
+    icon: Code2,
+    questions: [
+      {
+        question: "What does `typeof null` evaluate to in JavaScript?",
+        options: ["null", "undefined", "object", "boolean"],
+        correctAnswer: "object",
+        explanation:
+          "This is a long-standing JavaScript quirk. `typeof null` returns the string \"object\" because of an early implementation bug that was kept for backwards compatibility. To check for null specifically, compare with `=== null`.",
+      },
+      {
+        question: "Which method creates a NEW array with each element transformed?",
+        options: [".forEach()", ".map()", ".filter()", ".reduce()"],
+        correctAnswer: ".map()",
+        explanation:
+          "`.map()` returns a new array of the same length where each element is the result of the callback. `.forEach()` returns undefined, `.filter()` returns elements that pass a test, and `.reduce()` boils the array down to a single value.",
+      },
+      {
+        question: "What is the result of `0.1 + 0.2 === 0.3`?",
+        options: ["true", "false", "NaN", "TypeError"],
+        correctAnswer: "false",
+        explanation:
+          "Because of IEEE-754 floating-point representation, `0.1 + 0.2` is `0.30000000000000004`, not exactly `0.3`. Use `Math.abs(a - b) < Number.EPSILON` for safe equality, or work in integers (e.g. cents).",
+      },
+      {
+        question:
+          "Which keyword declares a block-scoped binding that cannot be reassigned?",
+        options: ["var", "let", "const", "static"],
+        correctAnswer: "const",
+        explanation:
+          "`const` is block-scoped and the binding cannot be reassigned. Note that the contents of objects/arrays declared with `const` can still be mutated. `let` is block-scoped but reassignable; `var` is function-scoped.",
+      },
+      {
+        question: "What does `Array.isArray([1, 2, 3])` return?",
+        options: ["\"array\"", "true", "\"object\"", "false"],
+        correctAnswer: "true",
+        explanation:
+          "`Array.isArray()` reliably checks for arrays and returns a boolean. `typeof [1,2,3]` returns \"object\", which is why this dedicated method exists.",
+      },
+    ],
+  },
+  {
+    id: "tpl-python-basics",
+    title: "Python Basics",
+    description: "Fundamentals every Python beginner should master.",
+    icon: Code2,
+    questions: [
+      {
+        question: "Which of these is a MUTABLE built-in type in Python?",
+        options: ["tuple", "str", "list", "frozenset"],
+        correctAnswer: "list",
+        explanation:
+          "Lists are mutable — you can append, replace, and remove items in place. Tuples, strings, and frozensets are all immutable; any \"change\" creates a new object.",
+      },
+      {
+        question: "What does `len(\"Hello\")` return?",
+        options: ["4", "5", "6", "It raises an error"],
+        correctAnswer: "5",
+        explanation:
+          "`len()` on a string returns the number of characters. \"Hello\" has 5 characters: H, e, l, l, o.",
+      },
+      {
+        question: "Which operator performs floor division in Python?",
+        options: ["/", "//", "%", "**"],
+        correctAnswer: "//",
+        explanation:
+          "`//` divides and rounds DOWN to the nearest integer (toward negative infinity). `/` is true division and always returns a float, `%` is modulo (remainder), `**` is exponentiation.",
+      },
+      {
+        question: "What does `list(range(5))` produce?",
+        options: [
+          "[1, 2, 3, 4, 5]",
+          "[0, 1, 2, 3, 4]",
+          "[0, 1, 2, 3, 4, 5]",
+          "[1, 2, 3, 4]",
+        ],
+        correctAnswer: "[0, 1, 2, 3, 4]",
+        explanation:
+          "`range(stop)` generates numbers from 0 up to but NOT including `stop`. So `range(5)` yields 0, 1, 2, 3, 4 — five numbers in total.",
+      },
+      {
+        question: "How do you create an empty dictionary in Python?",
+        options: ["[]", "()", "{}", "<>"],
+        correctAnswer: "{}",
+        explanation:
+          "Empty curly braces `{}` create an empty dict. `[]` is a list, `()` is a tuple. Note: `{1, 2}` with values (no colons) creates a SET, not a dict.",
+      },
+    ],
+  },
+  {
+    id: "tpl-science-101",
+    title: "General Science 101",
+    description: "Quick recall on classic science facts.",
+    icon: FlaskConical,
+    questions: [
+      {
+        question: "What is the chemical symbol for gold?",
+        options: ["Go", "Gd", "Au", "Ag"],
+        correctAnswer: "Au",
+        explanation:
+          "\"Au\" comes from the Latin word \"aurum\" meaning gold. \"Ag\" (argentum) is silver, \"Gd\" is gadolinium, and \"Go\" is not a real element symbol.",
+      },
+      {
+        question: "How many planets are officially in our solar system today?",
+        options: ["7", "8", "9", "10"],
+        correctAnswer: "8",
+        explanation:
+          "Since the IAU's 2006 reclassification, the solar system has 8 planets: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune. Pluto is now a dwarf planet.",
+      },
+      {
+        question: "Which organelle is known as the powerhouse of the cell?",
+        options: ["Nucleus", "Ribosome", "Mitochondrion", "Golgi apparatus"],
+        correctAnswer: "Mitochondrion",
+        explanation:
+          "Mitochondria generate most of a cell's ATP via cellular respiration. The nucleus stores DNA, ribosomes synthesize proteins, and the Golgi modifies and packages molecules.",
+      },
+      {
+        question: "Approximately how fast does light travel in a vacuum?",
+        options: [
+          "300 km/s",
+          "30,000 km/s",
+          "300,000 km/s",
+          "3,000,000 km/s",
+        ],
+        correctAnswer: "300,000 km/s",
+        explanation:
+          "The speed of light in a vacuum is exactly 299,792,458 m/s — usually rounded to 300,000 km/s. It's the universal speed limit for information and matter.",
+      },
+      {
+        question: "Which gas do plants primarily absorb during photosynthesis?",
+        options: ["Oxygen", "Nitrogen", "Carbon dioxide", "Hydrogen"],
+        correctAnswer: "Carbon dioxide",
+        explanation:
+          "During photosynthesis, plants absorb CO₂ from the air and water from the soil, using sunlight to produce glucose and release O₂ as a by-product. This drives the global carbon cycle.",
+      },
+    ],
+  },
+];
+
+/* ---------------- Settings persistence ---------------- */
+const SETTINGS_KEY = "sa.settings.v1";
+
+const DEFAULT_SETTINGS = {
+  displayName: "Alex Student",
+  email: "",
+  defaultModelId: "gemini-3.1-pro",
+  sendOnEnter: true, // false → Cmd/Ctrl+Enter sends, Enter inserts newline
+};
+
+const loadSettings = () => {
+  try {
+    const raw = window.localStorage.getItem(SETTINGS_KEY);
+    if (!raw) return DEFAULT_SETTINGS;
+    const parsed = JSON.parse(raw);
+    return { ...DEFAULT_SETTINGS, ...parsed };
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
+};
+
+const saveSettings = (settings) => {
+  try {
+    window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  } catch {
+    /* ignore */
+  }
+};
 
 /* ---------------- AI Models ---------------- */
 
@@ -336,6 +515,437 @@ const ModelSwitcher = ({ value, onChange }) => {
   );
 };
 
+/* ---------------- Settings Modal ---------------- */
+const SETTINGS_TABS = [
+  { id: "profile", label: "Profile", Icon: User },
+  { id: "preferences", label: "Preferences", Icon: SlidersHorizontal },
+  { id: "data", label: "Data", Icon: Database },
+];
+
+const SettingsModal = ({
+  open,
+  onClose,
+  settings,
+  onSave,
+  onClearChats,
+  onClearMCQ,
+  onResetAll,
+}) => {
+  const [tab, setTab] = useState("profile");
+  const [draft, setDraft] = useState(settings);
+  const [savedFlash, setSavedFlash] = useState(false);
+
+  // Re-sync local draft whenever the modal is opened or settings change
+  useEffect(() => {
+    if (open) {
+      setDraft(settings);
+      setTab("profile");
+      setSavedFlash(false);
+    }
+  }, [open, settings]);
+
+  // Close on ESC
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  const dirty = JSON.stringify(draft) !== JSON.stringify(settings);
+
+  const handleSave = () => {
+    onSave(draft);
+    setSavedFlash(true);
+    setTimeout(() => setSavedFlash(false), 1400);
+  };
+
+  const update = (patch) => setDraft((d) => ({ ...d, ...patch }));
+
+  return (
+    <div
+      data-testid="settings-modal"
+      className="fixed inset-0 z-50 flex items-center justify-center px-4"
+    >
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Panel */}
+      <div className="relative z-10 flex w-full max-w-[760px] overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_30px_80px_rgba(17,24,39,0.18)]">
+        {/* Tabs sidebar */}
+        <div className="flex w-[180px] shrink-0 flex-col border-r border-zinc-200 bg-zinc-50/60 p-3">
+          <div className="mb-3 px-2 pt-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+            Settings
+          </div>
+          {SETTINGS_TABS.map((t) => {
+            const active = tab === t.id;
+            const Icon = t.Icon;
+            return (
+              <button
+                key={t.id}
+                data-testid={`settings-tab-${t.id}`}
+                onClick={() => setTab(t.id)}
+                className={cn(
+                  "flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13px] font-medium transition-colors",
+                  active
+                    ? "bg-black text-white"
+                    : "text-zinc-700 hover:bg-zinc-100 hover:text-black"
+                )}
+              >
+                <Icon className="h-[15px] w-[15px]" />
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Content */}
+        <div className="flex min-h-[420px] min-w-0 flex-1 flex-col">
+          <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
+            <h2 className="text-[15px] font-semibold text-black">
+              {SETTINGS_TABS.find((t) => t.id === tab)?.label}
+            </h2>
+            <button
+              data-testid="settings-close"
+              onClick={onClose}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-100 hover:text-black"
+              aria-label="Close"
+            >
+              <X className="h-[18px] w-[18px]" />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-6 py-5">
+            {tab === "profile" && (
+              <div className="space-y-5">
+                <div>
+                  <label className="mb-1.5 block text-[12px] font-semibold text-zinc-700">
+                    Display name
+                  </label>
+                  <input
+                    data-testid="settings-displayName"
+                    type="text"
+                    value={draft.displayName}
+                    maxLength={40}
+                    onChange={(e) => update({ displayName: e.target.value })}
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-[14px] text-black outline-none transition focus:border-zinc-500"
+                    placeholder="Your name"
+                  />
+                  <p className="mt-1 text-[11.5px] text-zinc-500">
+                    Shown in the sidebar and used when greeting you.
+                  </p>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-[12px] font-semibold text-zinc-700">
+                    Email <span className="font-normal text-zinc-400">(optional)</span>
+                  </label>
+                  <input
+                    data-testid="settings-email"
+                    type="email"
+                    value={draft.email}
+                    onChange={(e) => update({ email: e.target.value })}
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-[14px] text-black outline-none transition focus:border-zinc-500"
+                    placeholder="you@example.com"
+                  />
+                </div>
+                <div className="rounded-lg border border-zinc-200 bg-zinc-50/60 p-3">
+                  <div className="mb-1 text-[11.5px] font-semibold uppercase tracking-wider text-zinc-500">
+                    Avatar preview
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-sm font-semibold text-white">
+                      {(draft.displayName || "?").trim().charAt(0).toUpperCase() || "?"}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="truncate text-[14px] font-medium text-black">
+                        {draft.displayName || "Anonymous"}
+                      </div>
+                      <div className="truncate text-[12px] text-zinc-500">
+                        {draft.email || "Free plan"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {tab === "preferences" && (
+              <div className="space-y-5">
+                <div>
+                  <label className="mb-1.5 block text-[12px] font-semibold text-zinc-700">
+                    Default AI model
+                  </label>
+                  <select
+                    data-testid="settings-defaultModel"
+                    value={draft.defaultModelId}
+                    onChange={(e) =>
+                      update({ defaultModelId: e.target.value })
+                    }
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-[14px] text-black outline-none transition focus:border-zinc-500"
+                  >
+                    {Object.entries(
+                      MODELS.reduce((acc, m) => {
+                        acc[m.provider] = acc[m.provider] || [];
+                        acc[m.provider].push(m);
+                        return acc;
+                      }, {})
+                    ).map(([provider, items]) => (
+                      <optgroup key={provider} label={provider}>
+                        {items.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-[11.5px] text-zinc-500">
+                    The model selected by default whenever you open the app.
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-zinc-200 bg-white p-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="text-[13.5px] font-semibold text-black">
+                        Send with Enter
+                      </div>
+                      <p className="mt-0.5 text-[11.5px] text-zinc-500">
+                        {draft.sendOnEnter
+                          ? "Press Enter to send. Shift+Enter for a newline."
+                          : "Press Cmd/Ctrl + Enter to send. Enter inserts a newline."}
+                      </p>
+                    </div>
+                    <button
+                      data-testid="settings-sendOnEnter"
+                      role="switch"
+                      aria-checked={draft.sendOnEnter}
+                      onClick={() =>
+                        update({ sendOnEnter: !draft.sendOnEnter })
+                      }
+                      className={cn(
+                        "relative h-6 w-11 shrink-0 rounded-full border transition-colors",
+                        draft.sendOnEnter
+                          ? "border-black bg-black"
+                          : "border-zinc-300 bg-zinc-200"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "absolute top-0.5 h-[18px] w-[18px] rounded-full bg-white shadow transition-transform",
+                          draft.sendOnEnter
+                            ? "translate-x-[22px]"
+                            : "translate-x-0.5"
+                        )}
+                      />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {tab === "data" && (
+              <div className="space-y-3">
+                <p className="text-[12.5px] text-zinc-500">
+                  All data is stored locally in your browser. Use these tools to
+                  clean up.
+                </p>
+
+                <button
+                  data-testid="settings-clear-chats"
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        "Delete all chat history? This cannot be undone."
+                      )
+                    ) {
+                      onClearChats();
+                    }
+                  }}
+                  className="flex w-full items-center justify-between rounded-lg border border-zinc-200 bg-white px-4 py-3 text-left transition hover:border-zinc-400 hover:bg-zinc-50"
+                >
+                  <div>
+                    <div className="text-[13.5px] font-semibold text-black">
+                      Clear all chats
+                    </div>
+                    <div className="text-[11.5px] text-zinc-500">
+                      Removes every chat from the sidebar.
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-zinc-400" />
+                </button>
+
+                <button
+                  data-testid="settings-clear-mcq"
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        "Delete all MCQ history? This cannot be undone."
+                      )
+                    ) {
+                      onClearMCQ();
+                    }
+                  }}
+                  className="flex w-full items-center justify-between rounded-lg border border-zinc-200 bg-white px-4 py-3 text-left transition hover:border-zinc-400 hover:bg-zinc-50"
+                >
+                  <div>
+                    <div className="text-[13.5px] font-semibold text-black">
+                      Clear all MCQ sessions
+                    </div>
+                    <div className="text-[11.5px] text-zinc-500">
+                      Removes every quiz from the sidebar.
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-zinc-400" />
+                </button>
+
+                <button
+                  data-testid="settings-reset-all"
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        "Reset everything (settings + chats + quizzes) to defaults?"
+                      )
+                    ) {
+                      onResetAll();
+                      onClose();
+                    }
+                  }}
+                  className="flex w-full items-center justify-between rounded-lg border border-red-200 bg-red-50/60 px-4 py-3 text-left transition hover:border-red-400 hover:bg-red-50"
+                >
+                  <div>
+                    <div className="text-[13.5px] font-semibold text-red-700">
+                      Reset everything
+                    </div>
+                    <div className="text-[11.5px] text-red-500/80">
+                      Restore the app to its initial state.
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-red-400" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between border-t border-zinc-200 px-6 py-3">
+            <span
+              className={cn(
+                "text-[12px] font-medium transition-opacity",
+                savedFlash ? "text-emerald-600 opacity-100" : "opacity-0"
+              )}
+            >
+              ✓ Saved
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onClose}
+                className="rounded-lg border border-zinc-200 bg-white px-3.5 py-1.5 text-[13px] font-medium text-zinc-700 transition hover:border-zinc-400 hover:bg-zinc-50 hover:text-black"
+              >
+                Cancel
+              </button>
+              <button
+                data-testid="settings-save"
+                onClick={handleSave}
+                disabled={!dirty}
+                className={cn(
+                  "rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition-all duration-200",
+                  dirty
+                    ? "bg-black text-white hover:bg-zinc-800 active:scale-[0.97]"
+                    : "cursor-not-allowed bg-zinc-100 text-zinc-400"
+                )}
+              >
+                Save changes
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ---------------- MCQ Template Picker ---------------- */
+const TemplatePicker = ({ onPick }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        data-testid="template-picker-trigger"
+        onClick={() => setOpen((v) => !v)}
+        className="hidden items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-[13px] font-medium text-zinc-700 transition hover:border-zinc-400 hover:bg-zinc-50 hover:text-black sm:inline-flex"
+      >
+        <LayoutTemplate className="h-[15px] w-[15px]" />
+        <span>Use template</span>
+        <ChevronDown
+          className={cn(
+            "h-[14px] w-[14px] text-zinc-500 transition-transform",
+            open && "rotate-180"
+          )}
+        />
+      </button>
+
+      {open && (
+        <div
+          data-testid="template-picker-dropdown"
+          className="absolute bottom-full left-0 z-50 mb-2 w-[340px] origin-bottom-left rounded-xl border border-zinc-200 bg-white p-1.5 shadow-[0_12px_40px_rgba(17,24,39,0.12)]"
+        >
+          <div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+            Ready-to-practice quizzes
+          </div>
+          {MCQ_TEMPLATES.map((tpl) => {
+            const Icon = tpl.icon || LayoutTemplate;
+            return (
+              <button
+                key={tpl.id}
+                data-testid={`template-${tpl.id}`}
+                onClick={() => {
+                  onPick(tpl);
+                  setOpen(false);
+                }}
+                className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-zinc-100"
+              >
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-black text-white ring-1 ring-black/10">
+                  <Icon className="h-[15px] w-[15px]" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate text-[13px] font-semibold text-black">
+                      {tpl.title}
+                    </span>
+                    <span className="rounded bg-zinc-900 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-white">
+                      {tpl.questions.length} Qs
+                    </span>
+                  </div>
+                  <div className="mt-0.5 truncate text-[11.5px] text-zinc-500">
+                    {tpl.description}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 /* ---------------- Sidebar ---------------- */
 const SectionTabs = ({ section, onChange }) => {
   const tabs = [
@@ -385,6 +995,8 @@ const Sidebar = ({
   recentChats,
   recentMCQ,
   onDelete,
+  displayName,
+  onOpenSettings,
 }) => {
   const [query, setQuery] = useState("");
   const pool = section === "chat" ? recentChats : recentMCQ;
@@ -542,18 +1154,20 @@ const Sidebar = ({
         {/* Footer */}
         <div className="border-t border-zinc-200/80 p-3">
           <button
+            data-testid="open-settings"
+            onClick={onOpenSettings}
             className={cn(
               "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-zinc-600 transition hover:bg-black/[0.04] hover:text-black",
               !open && "justify-center px-0"
             )}
           >
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black text-xs font-semibold text-white">
-              A
+              {(displayName || "?").trim().charAt(0).toUpperCase() || "?"}
             </div>
             {open && (
               <div className="flex min-w-0 flex-1 flex-col text-left">
                 <span className="truncate text-[13px] font-medium text-black">
-                  Alex Student
+                  {displayName || "Anonymous"}
                 </span>
                 <span className="text-[11px] text-zinc-500">Free plan</span>
               </div>
@@ -666,7 +1280,7 @@ const MCQCard = ({ q, index, selected, onSelect }) => {
 };
 
 /* ---------------- Quiz View ---------------- */
-const QuizView = ({ questions, answers, onAnswer, onReset }) => {
+const QuizView = ({ questions, answers, onAnswer, onReset, title }) => {
   const total = questions.length;
   const answered = Object.keys(answers).length;
   const correct = Object.entries(answers).filter(
@@ -682,7 +1296,7 @@ const QuizView = ({ questions, answers, onAnswer, onReset }) => {
             Generated quiz
           </div>
           <h2 className="text-2xl font-semibold tracking-tight text-black">
-            Data Structures — Stacks & Queues
+            {title || "Quiz session"}
           </h2>
           <p className="mt-1 text-sm text-zinc-500">
             {total} questions · Pick an option to reveal the explanation
@@ -735,7 +1349,7 @@ const QuizView = ({ questions, answers, onAnswer, onReset }) => {
 };
 
 /* ---------------- MCQ Composer (upload-focused) ---------------- */
-const MCQComposer = ({ onSubmitText, onUpload }) => {
+const MCQComposer = ({ onSubmitText, onUpload, onPickTemplate, sendOnEnter }) => {
   const [text, setText] = useState("");
   const fileRef = useRef(null);
   const taRef = useRef(null);
@@ -757,7 +1371,10 @@ const MCQComposer = ({ onSubmitText, onUpload }) => {
   };
 
   const handleKey = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    const isSendCombo = sendOnEnter
+      ? e.key === "Enter" && !e.shiftKey
+      : e.key === "Enter" && (e.metaKey || e.ctrlKey);
+    if (isSendCombo) {
       e.preventDefault();
       handleSubmit();
     }
@@ -800,10 +1417,7 @@ const MCQComposer = ({ onSubmitText, onUpload }) => {
                 <Upload className="h-[15px] w-[15px]" />
                 <span>Upload PDF / Image</span>
               </button>
-              <button className="hidden items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-[13px] font-medium text-zinc-700 transition hover:border-zinc-400 hover:bg-zinc-50 hover:text-black sm:inline-flex">
-                <FileText className="h-[15px] w-[15px]" />
-                <span>Use template</span>
-              </button>
+              <TemplatePicker onPick={onPickTemplate} />
             </div>
 
             <button
@@ -831,7 +1445,7 @@ const MCQComposer = ({ onSubmitText, onUpload }) => {
 };
 
 /* ---------------- Chat Composer (with model switcher) ---------------- */
-const ChatComposer = ({ onSend, model, onModelChange }) => {
+const ChatComposer = ({ onSend, model, onModelChange, sendOnEnter }) => {
   const [text, setText] = useState("");
   const taRef = useRef(null);
 
@@ -852,7 +1466,10 @@ const ChatComposer = ({ onSend, model, onModelChange }) => {
   };
 
   const handleKey = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    const isSendCombo = sendOnEnter
+      ? e.key === "Enter" && !e.shiftKey
+      : e.key === "Enter" && (e.metaKey || e.ctrlKey);
+    if (isSendCombo) {
       e.preventDefault();
       handleSubmit();
     }
@@ -1122,6 +1739,13 @@ export default function StudyAssistant() {
   const [section, setSection] = useState("chat"); // 'chat' | 'mcq'
   const [activeId, setActiveId] = useState(null);
 
+  // Settings (persisted)
+  const [settings, setSettings] = useState(() => loadSettings());
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  useEffect(() => {
+    saveSettings(settings);
+  }, [settings]);
+
   // Recent lists hydrated from localStorage so deletes & additions persist.
   // Falls back to dummy data on first ever load.
   const [recentChats, setRecentChats] = useState(() => {
@@ -1141,14 +1765,27 @@ export default function StudyAssistant() {
   // MCQ state
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
+  const [activeQuizTitle, setActiveQuizTitle] = useState("");
 
   // Chat state
   const [messages, setMessages] = useState([]); // {role, content, model, provider}
   const [isTyping, setIsTyping] = useState(false);
-  const [model, setModel] = useState(MODELS[0].id);
+  const [model, setModel] = useState(() => {
+    const saved = loadSettings();
+    return saved.defaultModelId || MODELS[0].id;
+  });
   const chatScrollRef = useRef(null);
 
   const currentModel = MODELS.find((m) => m.id === model) || MODELS[0];
+
+  // Keep selected model in sync with settings.defaultModelId when settings change
+  // (only if the user hasn't started chatting in this session)
+  useEffect(() => {
+    if (messages.length === 0 && !isTyping && settings.defaultModelId) {
+      setModel(settings.defaultModelId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.defaultModelId]);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -1191,7 +1828,29 @@ export default function StudyAssistant() {
   const handleResetQuiz = () => {
     setQuestions([]);
     setAnswers({});
+    setActiveQuizTitle("");
     setActiveId(null);
+  };
+
+  // Use a curated MCQ template — loads its questions and creates a sidebar entry
+  const handleUseTemplate = (tpl) => {
+    if (!tpl || !Array.isArray(tpl.questions)) return;
+    setQuestions(tpl.questions);
+    setAnswers({});
+    setActiveQuizTitle(tpl.title);
+    if (!activeId) {
+      const newId = `m_${Date.now()}`;
+      setRecentMCQ((prev) => [
+        { id: newId, title: tpl.title, date: "Just now" },
+        ...prev,
+      ]);
+      setActiveId(newId);
+    }
+    requestAnimationFrame(() => {
+      document
+        .getElementById("quiz-anchor")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
   /* --- Chat handlers --- */
@@ -1278,6 +1937,27 @@ export default function StudyAssistant() {
     }
   };
 
+  /* --- Settings handlers --- */
+  const handleSaveSettings = (next) => {
+    setSettings(next);
+  };
+  const handleClearAllChats = () => {
+    setRecentChats([]);
+    handleResetChat();
+  };
+  const handleClearAllMCQ = () => {
+    setRecentMCQ([]);
+    handleResetQuiz();
+  };
+  const handleResetAll = () => {
+    setSettings(DEFAULT_SETTINGS);
+    setRecentChats(DUMMY_RECENT_CHATS);
+    setRecentMCQ(DUMMY_RECENT_MCQ);
+    handleResetChat();
+    handleResetQuiz();
+    setModel(DEFAULT_SETTINGS.defaultModelId);
+  };
+
   const hasChat = messages.length > 0 || isTyping;
   const hasQuiz = questions.length > 0;
 
@@ -1307,6 +1987,8 @@ export default function StudyAssistant() {
           recentChats={recentChats}
           recentMCQ={recentMCQ}
           onDelete={handleDelete}
+          displayName={settings.displayName}
+          onOpenSettings={() => setSettingsOpen(true)}
         />
 
         <main className="relative flex h-screen min-w-0 flex-1 flex-col">
@@ -1353,6 +2035,7 @@ export default function StudyAssistant() {
                       answers={answers}
                       onAnswer={handleAnswer}
                       onReset={handleResetQuiz}
+                      title={activeQuizTitle || "Quiz session"}
                     />
                   </div>
                 )}
@@ -1374,16 +2057,30 @@ export default function StudyAssistant() {
                 onSend={handleSend}
                 model={model}
                 onModelChange={setModel}
+                sendOnEnter={settings.sendOnEnter}
               />
             ) : (
               <MCQComposer
                 onSubmitText={startQuiz}
                 onUpload={startQuiz}
+                onPickTemplate={handleUseTemplate}
+                sendOnEnter={settings.sendOnEnter}
               />
             )}
           </div>
         </main>
       </div>
+
+      {/* Settings modal */}
+      <SettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        settings={settings}
+        onSave={handleSaveSettings}
+        onClearChats={handleClearAllChats}
+        onClearMCQ={handleClearAllMCQ}
+        onResetAll={handleResetAll}
+      />
     </div>
   );
 }
