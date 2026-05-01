@@ -14,9 +14,84 @@
   background: transparent;
 }
 .App ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.12);
   border-radius: 8px;
 }
 .App ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+/* ---------------- Typing indicator animations ---------------- */
+
+/* Vertical EQ-style bars that scale rhythmically */
+@keyframes sa-eq {
+  0%, 100% { transform: scaleY(0.28); }
+  50%      { transform: scaleY(1); }
+}
+
+.sa-eq-bar {
+  display: inline-block;
+  width: 3px;
+  height: 18px;
+  background: #111;
+  border-radius: 2px;
+  transform-origin: 50% 100%;
+  animation: sa-eq 1s ease-in-out infinite;
+}
+
+.sa-eq-bar:nth-child(1) { animation-delay: 0ms;   }
+.sa-eq-bar:nth-child(2) { animation-delay: 120ms; }
+.sa-eq-bar:nth-child(3) { animation-delay: 240ms; }
+.sa-eq-bar:nth-child(4) { animation-delay: 360ms; }
+.sa-eq-bar:nth-child(5) { animation-delay: 180ms; }
+
+/* Shimmer sweep across the "Thinking" text */
+@keyframes sa-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+.sa-shimmer-text {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.25) 0%,
+    rgba(0, 0, 0, 0.95) 45%,
+    rgba(0, 0, 0, 0.25) 80%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+          color: transparent;
+  animation: sa-shimmer 1.6s linear infinite;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Sonar-style pulsing rings around the avatar */
+@keyframes sa-ping {
+  0%   { transform: scale(0.85); opacity: 0.55; }
+  80%  { transform: scale(1.6);  opacity: 0;    }
+  100% { transform: scale(1.6);  opacity: 0;    }
+}
+
+.sa-ping-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(0, 0, 0, 0.55);
+  animation: sa-ping 1.6s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+  pointer-events: none;
+}
+
+.sa-ping-ring.delay-1 { animation-delay: 0.55s; }
+
+/* Soft breathing on the avatar itself */
+@keyframes sa-breathe {
+  0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(0,0,0,0.18); }
+  50%      { transform: scale(1.04); box-shadow: 0 0 0 4px rgba(0,0,0,0.06); }
+}
+
+.sa-breathe {
+  animation: sa-breathe 1.8s ease-in-out infinite;
 }

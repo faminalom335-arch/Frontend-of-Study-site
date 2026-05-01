@@ -28,8 +28,25 @@ import {
   Gem,
   Asterisk,
   Atom,
-  Moon,
 } from "lucide-react";
+
+/* Generic monogram glyph used as a placeholder mark (not a brand reproduction) */
+const KMonogram = ({ className = "h-3.5 w-3.5", strokeWidth = 2.2 }) => (
+  <svg
+    viewBox="0 0 24 24"
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={strokeWidth}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M7 4v16" />
+    <path d="M7 12 L17 4" />
+    <path d="M7 12 L17 20" />
+  </svg>
+);
 
 /**
  * TypeScript interface reference (documented for consumer use):
@@ -114,12 +131,12 @@ const PROVIDER_STYLES = {
   Kimi: "bg-black text-white ring-black/20",
 };
 
-// Generic abstract icons per provider (NOT official brand logos)
+// Generic abstract icons per provider (NOT official brand logos — placeholders)
 const PROVIDER_ICONS = {
   Google: Gem,
   Anthropic: Asterisk,
   OpenAI: Atom,
-  Kimi: Moon,
+  Kimi: KMonogram,
 };
 
 const ProviderIcon = ({ provider, className = "h-3.5 w-3.5" }) => {
@@ -957,17 +974,29 @@ const ChatMessage = ({ role, content, modelName, modelProvider }) => {
 
 const TypingIndicator = ({ modelProvider }) => (
   <div data-testid="typing-indicator" className="flex gap-3">
-    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black text-white ring-1 ring-black/10">
-      {modelProvider ? (
-        <ProviderIcon provider={modelProvider} className="h-4 w-4" />
-      ) : (
-        <Bot className="h-4 w-4" />
-      )}
+    {/* Avatar with sonar pulse rings */}
+    <div className="relative h-8 w-8 shrink-0">
+      <span className="sa-ping-ring" />
+      <span className="sa-ping-ring delay-1" />
+      <div className="sa-breathe relative flex h-8 w-8 items-center justify-center rounded-full bg-black text-white ring-1 ring-black/10">
+        {modelProvider ? (
+          <ProviderIcon provider={modelProvider} className="h-4 w-4" />
+        ) : (
+          <Bot className="h-4 w-4" />
+        )}
+      </div>
     </div>
-    <div className="flex items-center gap-1.5 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-sm">
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-400 [animation-delay:-0.3s]" />
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-400 [animation-delay:-0.15s]" />
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-400" />
+
+    {/* Animated bubble: EQ bars + shimmering "Thinking" text */}
+    <div className="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-sm">
+      <div className="flex items-end gap-[3px] h-[18px]">
+        <span className="sa-eq-bar" />
+        <span className="sa-eq-bar" />
+        <span className="sa-eq-bar" />
+        <span className="sa-eq-bar" />
+        <span className="sa-eq-bar" />
+      </div>
+      <span className="sa-shimmer-text text-[13px]">Thinking</span>
     </div>
   </div>
 );
@@ -1110,7 +1139,7 @@ export default function StudyAssistant() {
         },
       ]);
       setIsTyping(false);
-    }, 900);
+    }, 1500);
   };
   const handleResetChat = () => {
     setMessages([]);
