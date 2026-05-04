@@ -723,6 +723,308 @@ const HowItWorks = () => {
 };
 
 /* =====================================================================
+/* =====================================================================
+ * Animated MCQ Paper — student-answers → system-checks → top-grade loop
+ *
+ * Phase machine:
+ *   0  rest (empty checkboxes)         — 900ms
+ *   1  answering Q1 (active ring)      — 420ms
+ *   2  Q1 ticked, answering Q2         — 420ms
+ *   3  Q2 ticked, answering Q3         — 420ms
+ *   4  All ticked, "checking answers…" — 1100ms
+ *   5  Graded: A+ stamp slams in       — 2600ms hold
+ * (then restarts from 0)
+ * ==================================================================== */
+const MCQ_QS = [
+  {
+    q: "Which data structure uses LIFO order?",
+    options: ["Queue", "Stack", "Tree", "Graph"],
+    correct: 1,
+  },
+  {
+    q: "Worst-case time complexity of linear search?",
+    options: ["O(1)", "O(log n)", "O(n)", "O(n²)"],
+    correct: 2,
+  },
+  {
+    q: "Which algorithm has O(log n) average complexity?",
+    options: ["Bubble sort", "Binary search", "Linear search", "Depth-first search"],
+    correct: 1,
+  },
+];
+
+const PHASE_DURATIONS = [900, 420, 420, 420, 1100, 2600];
+
+const AnimatedMCQPaper = () => {
+  const [phase, setPhase] = useState(0);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setPhase((p) => (p + 1) % PHASE_DURATIONS.length);
+    }, PHASE_DURATIONS[phase]);
+    return () => clearTimeout(t);
+  }, [phase]);
+
+  // phase → which questions are "already answered" (check visible)
+  const answeredCount = phase >= 4 ? 3 : Math.max(0, phase - 0) - (phase === 0 ? 0 : 0);
+  // cleaner:
+  // phase 0 → 0 answered
+  // phase 1 → Q1 actively being picked (not yet ticked)
+  // phase 2 → Q1 ticked, Q2 active
+  // phase 3 → Q2 ticked, Q3 active
+  // phase ≥ 4 → all 3 ticked
+  const isAnswered = (idx) => {
+    if (phase === 0) return false;
+    if (phase >= 4) return true;
+    return idx < phase - 1;
+  };
+  const isActive = (idx) => {
+    if (phase === 0 || phase >= 4) return false;
+    return idx === phase - 1;
+  };
+
+  const checking = phase === 4;
+  const graded = phase === 5;
+
+  return (
+    <div className="relative">
+      {/* paper card */}
+      <div
+        className="relative overflow-hidden rounded-2xl border p-5 shadow-[0_20px_50px_rgba(120,85,30,0.14)]"
+        style={{
+          background:
+            "linear-gradient(180deg, #fbf4de 0%, #f4ead0 60%, #eeddb6 100%)",
+          borderColor: "#c7ad78",
+        }}
+        data-testid="animated-mcq-paper"
+      >
+        {/* ruled lines */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-[0.32]"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(to bottom, transparent 0, transparent 27px, rgba(139,101,45,0.18) 27px, rgba(139,101,45,0.18) 28px)",
+          }}
+        />
+
+        {/* questions */}
+        <div className="relative space-y-4">
+          {MCQ_QS.map((q, qi) => {
+            const answered = isAnswered(qi);
+            const active = isActive(qi);
+            return (
+              <div key={qi} data-testid={`mcq-q-${qi}`}>
+                <div className="mb-2 flex items-start gap-2">
+                  <span
+                    className="inline-flex h-6 min-w-[24px] shrink-0 items-center justify-center rounded px-1.5 text-[10.5px] font-bold"
+                    style={{ background: "#2a2218", color: "#fbf4de" }}
+                  >
+                    Q{qi + 1}
+                  </span>
+                  <div
+                    className="text-[12.5px] leading-snug"
+                    style={{
+                      color: "#2a2218",
+                      fontFamily: "'Manrope', sans-serif",
+                      fontWeight: 650,
+                    }}
+                  >
+                    {q.q}
+                  </div>
+                </div>
+                <div className="grid gap-1.5 sm:grid-cols-2">
+                  {q.options.map((opt, oi) => {
+                    const isCorrect = oi === q.correct;
+                    const showTick = answered && isCorrect;
+                    const showActive = active && isCorrect;
+                    return (
+                      <div
+                        key={opt}
+                        className={cn(
+                          "relative flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-[11.5px] transition-all duration-300",
+                          showActive && "lp-mcq-active"
+                        )}
+                        style={{
+                          borderColor: showTick
+                            ? "#2a2218"
+                            : "rgba(139,101,45,0.35)",
+                          background: showTick
+                            ? "rgba(255,255,255,0.7)"
+                            : "rgba(255,255,255,0.35)",
+                        }}
+                      >
+                        <span
+                          className="relative flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border-[1.5px]"
+                          style={{
+                            borderColor: showTick ? "#2a2218" : "#8a7348",
+                            background: showTick
+                              ? "#fbf4de"
+                              : "rgba(255,255,255,0.6)",
+                          }}
+                        >
+                          {showTick && (
+                            <Check
+                              className="lp-check-in h-[10px] w-[10px]"
+                              strokeWidth={3}
+                              style={{ color: "#2a2218" }}
+                            />
+                          )}
+                          {/* active pen-hover pulse ring */}
+                          {showActive && (
+                            <span
+                              aria-hidden="true"
+                              className="lp-pen-ring absolute -inset-1 rounded-md"
+                              style={{ borderColor: "#2a2218" }}
+                            />
+                          )}
+                        </span>
+                        <span
+                          style={{
+                            fontFamily:
+                              "'Edu VIC WA NT Beginner', 'Comic Sans MS', cursive",
+                            color: "#2a2218",
+                          }}
+                        >
+                          <span
+                            className="mr-1 font-semibold"
+                            style={{
+                              color: "#6b5434",
+                              fontFamily: "'Manrope', sans-serif",
+                            }}
+                          >
+                            {String.fromCharCode(65 + oi)}.
+                          </span>
+                          {opt}
+                        </span>
+
+                        {/* flying pen that lands on the active correct option */}
+                        {showActive && (
+                          <span
+                            aria-hidden="true"
+                            className="lp-pen-fly pointer-events-none absolute -right-1 -top-4"
+                          >
+                            <PenGlyph />
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* "Checking answers…" badge */}
+        <div
+          className={cn(
+            "relative mt-4 flex items-center justify-center gap-2 rounded-lg border px-3 py-1.5 text-[11px] font-semibold transition-all duration-300",
+            checking
+              ? "lp-pop opacity-100"
+              : graded
+              ? "opacity-0"
+              : "opacity-0"
+          )}
+          style={{
+            borderColor: "rgba(139,101,45,0.45)",
+            background: "rgba(255,255,255,0.55)",
+            color: "#2a2218",
+          }}
+        >
+          <span className="lp-sonic relative flex h-2.5 w-2.5">
+            <span
+              className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60"
+              style={{ background: "#2a2218" }}
+            />
+            <span
+              className="relative inline-flex h-2.5 w-2.5 rounded-full"
+              style={{ background: "#2a2218" }}
+            />
+          </span>
+          Checking answers…
+        </div>
+
+        {/* final handwritten remark when graded */}
+        <div
+          className={cn(
+            "relative mt-4 flex items-center justify-between gap-3 text-[12px] transition-all duration-500",
+            graded ? "lp-remark-in opacity-100" : "opacity-0"
+          )}
+          style={{ color: "#c42a30" }}
+        >
+          <span
+            style={{
+              fontFamily: "'Edu VIC WA NT Beginner', cursive",
+              fontWeight: 700,
+              fontSize: "14px",
+            }}
+          >
+            Excellent work! 3/3 ✓
+          </span>
+          <span
+            style={{
+              fontFamily: "'Edu VIC WA NT Beginner', cursive",
+              fontSize: "11.5px",
+              opacity: 0.85,
+            }}
+          >
+            — graded in 0.8s
+          </span>
+        </div>
+      </div>
+
+      {/* A+ stamp — slams in when graded */}
+      <div
+        aria-hidden={!graded}
+        className={cn(
+          "absolute -right-3 -top-3 flex h-16 w-16 items-center justify-center rounded-full border-[2.5px] transition-all",
+          graded ? "lp-stamp-in opacity-100" : "opacity-0"
+        )}
+        style={{
+          borderColor: "#c42a30",
+          background: "rgba(255,249,220,0.96)",
+          boxShadow: "0 8px 20px rgba(196,42,48,0.25)",
+        }}
+      >
+        <span
+          style={{
+            color: "#c42a30",
+            fontFamily: "'Edu VIC WA NT Beginner', cursive",
+            fontWeight: 700,
+            fontSize: 28,
+            lineHeight: 1,
+          }}
+        >
+          A+
+        </span>
+      </div>
+    </div>
+  );
+};
+
+/* Tiny pen glyph used for the "student is picking an answer" flourish */
+const PenGlyph = () => (
+  <svg
+    viewBox="0 0 24 24"
+    width="16"
+    height="16"
+    fill="none"
+    stroke="#2a2218"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ transform: "rotate(14deg)" }}
+  >
+    <path d="M12 19l7-7 3 3-7 7-3-3z" />
+    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18" />
+    <path d="M2 2l7.586 7.586" />
+    <circle cx="11" cy="11" r="1.5" fill="#2a2218" />
+  </svg>
+);
+
+
+/* =====================================================================
  * SHOWCASE — alternating feature+visual rows
  * ==================================================================== */
 const Showcase = () => {
@@ -811,110 +1113,7 @@ const Showcase = () => {
           className="lp-reveal grid items-center gap-10 lg:grid-cols-2"
         >
           <div className="order-2 lg:order-1 relative">
-            {/* paper mock */}
-            <div
-              className="relative overflow-hidden rounded-2xl border p-6 shadow-[0_20px_50px_rgba(120,85,30,0.14)]"
-              style={{
-                background:
-                  "linear-gradient(180deg, #fbf4de 0%, #f4ead0 60%, #eeddb6 100%)",
-                borderColor: "#c7ad78",
-              }}
-            >
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 opacity-[0.32]"
-                style={{
-                  backgroundImage:
-                    "repeating-linear-gradient(to bottom, transparent 0, transparent 27px, rgba(139,101,45,0.18) 27px, rgba(139,101,45,0.18) 28px)",
-                }}
-              />
-              <div className="relative mb-4 flex items-center gap-2">
-                <span
-                  className="inline-flex h-7 items-center rounded-md px-2 text-[11px] font-bold"
-                  style={{ background: "#2a2218", color: "#fbf4de" }}
-                >
-                  Q3
-                </span>
-                <div
-                  className="text-[14px] font-semibold"
-                  style={{
-                    color: "#2a2218",
-                    fontFamily: "'Manrope', sans-serif",
-                    fontWeight: 650,
-                  }}
-                >
-                  Which algorithm has O(log n) average complexity?
-                </div>
-              </div>
-              <div className="relative grid gap-2 sm:grid-cols-2">
-                {[
-                  { t: "Bubble sort", ok: false },
-                  { t: "Binary search", ok: true },
-                  { t: "Linear search", ok: false },
-                  { t: "Depth-first search", ok: false },
-                ].map((o, i) => (
-                  <div
-                    key={o.t}
-                    className="flex items-center gap-2 rounded-lg border px-2.5 py-2 text-[13px]"
-                    style={{
-                      borderColor: o.ok ? "#2a2218" : "rgba(139,101,45,0.35)",
-                      background: o.ok
-                        ? "rgba(255,255,255,0.65)"
-                        : "rgba(255,255,255,0.35)",
-                    }}
-                  >
-                    <span
-                      className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border-[1.5px]"
-                      style={{
-                        borderColor: o.ok ? "#2a2218" : "#8a7348",
-                        background: o.ok ? "#fbf4de" : "rgba(255,255,255,0.6)",
-                      }}
-                    >
-                      {o.ok && (
-                        <Check className="h-[10px] w-[10px]" strokeWidth={3} />
-                      )}
-                    </span>
-                    <span
-                      style={{
-                        fontFamily:
-                          "'Edu VIC WA NT Beginner', 'Comic Sans MS', cursive",
-                        color: "#2a2218",
-                      }}
-                    >
-                      <span
-                        className="mr-1 font-semibold"
-                        style={{ color: "#6b5434", fontFamily: "'Manrope', sans-serif" }}
-                      >
-                        {String.fromCharCode(65 + i)}.
-                      </span>
-                      {o.t}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            {/* red-pen grade sticker */}
-            <div
-              className="absolute -right-3 -top-3 flex h-16 w-16 items-center justify-center rounded-full border-[2.5px]"
-              style={{
-                borderColor: "#c42a30",
-                background: "rgba(255,249,220,0.95)",
-                transform: "rotate(-8deg)",
-                boxShadow: "0 8px 20px rgba(196,42,48,0.25)",
-              }}
-            >
-              <span
-                style={{
-                  color: "#c42a30",
-                  fontFamily: "'Edu VIC WA NT Beginner', cursive",
-                  fontWeight: 700,
-                  fontSize: 28,
-                  lineHeight: 1,
-                }}
-              >
-                A+
-              </span>
-            </div>
+            <AnimatedMCQPaper />
           </div>
 
           <div className="order-1 lg:order-2 text-center lg:text-left">
@@ -947,87 +1146,6 @@ const Showcase = () => {
               ))}
             </ul>
           </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-/* =====================================================================
- * TESTIMONIALS
- * ==================================================================== */
-const TESTIMONIALS = [
-  {
-    quote:
-      "I stopped re-reading chapters. Dropping my lecture PDF into Study·AI and battling the quiz is my new revision loop.",
-    name: "Maya R.",
-    role: "Pre-med, 3rd year",
-  },
-  {
-    quote:
-      "The paper-grading sheet hits different. Red pen + a handwritten A− is somehow more motivating than any dashboard.",
-    name: "Leo K.",
-    role: "CS Undergrad",
-  },
-  {
-    quote:
-      "Switching between Gemini for photos and Claude for long theory inside one chat is a life hack I can't go back from.",
-    name: "Aisha P.",
-    role: "GRE candidate",
-  },
-];
-
-const Testimonials = () => {
-  const ref = useReveal();
-  return (
-    <section className="relative bg-zinc-50/60 py-20 sm:py-28">
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <SectionHeading
-          title="They were skeptical. Now they're top of the class."
-        />
-
-        <div ref={ref} className="lp-reveal mt-12 grid gap-4 md:grid-cols-3">
-          {TESTIMONIALS.map((t, i) => (
-            <TiltCard
-              key={t.name}
-              testId={`testimonial-card-${i}`}
-              max={7}
-              glare="dark"
-              className="rounded-2xl"
-            >
-              <figure className="relative h-full overflow-hidden rounded-2xl border border-zinc-200 bg-white p-6 transition-all duration-300 hover:border-black hover:shadow-[0_18px_40px_rgba(0,0,0,0.08)]">
-                <Quote
-                  className="absolute right-5 top-5 h-7 w-7 text-zinc-200"
-                  strokeWidth={1.8}
-                />
-                <div className="mb-3 flex gap-0.5">
-                  {[0, 1, 2, 3, 4].map((s) => (
-                    <Star
-                      key={s}
-                      className="h-[14px] w-[14px] fill-black text-black"
-                    />
-                  ))}
-                </div>
-                <blockquote className="text-[14px] leading-relaxed text-black">
-                  "{t.quote}"
-                </blockquote>
-                <figcaption className="mt-5 flex items-center gap-3">
-                  <div
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-black text-[13px] font-semibold text-white"
-                    style={{ fontFamily: "'Manrope', sans-serif" }}
-                  >
-                    {t.name.charAt(0)}
-                  </div>
-                  <div>
-                    <div className="text-[13px] font-semibold text-black">
-                      {t.name}
-                    </div>
-                    <div className="text-[11.5px] text-zinc-500">{t.role}</div>
-                  </div>
-                </figcaption>
-              </figure>
-            </TiltCard>
-          ))}
         </div>
       </div>
     </section>
@@ -1272,7 +1390,6 @@ export default function LandingPage() {
       <FeaturesGrid />
       <HowItWorks />
       <Showcase />
-      <Testimonials />
       <FAQ />
       <FinalCTA />
       <Footer />

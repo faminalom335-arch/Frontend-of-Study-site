@@ -1,26 +1,18 @@
 [
   {
-    "content": "Replace typewriter with modern word-stagger blur-slide animation",
+    "content": "Remove Testimonials section, component, data array, and unused Quote import",
     "status": "completed"
   },
   {
-    "content": "Remove 'Your Score A · 94%' floating chip from hero preview",
+    "content": "Build animated MCQShowcaseCard: 3 questions + pen-cursor tick sequence + 'checking' badge + A+ stamp",
     "status": "completed"
   },
   {
-    "content": "Build TiltCard wrapper (3D perspective + cursor-following glare)",
+    "content": "Add CSS keyframes for check-draw, stamp-slam, pen-cursor pulse",
     "status": "completed"
   },
   {
-    "content": "Apply TiltCard to hero preview, feature cards, step cards, testimonial cards",
-    "status": "completed"
-  },
-  {
-    "content": "Add CSS keyframes (lp-word-in, tilt transforms, glare)",
-    "status": "completed"
-  },
-  {
-    "content": "Verify with esbuild + screenshot",
+    "content": "Verify with esbuild + screenshot (phase captures)",
     "status": "completed"
   }
 ]
