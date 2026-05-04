@@ -210,7 +210,7 @@ const TRANSLATIONS = {
     },
     hero: {
       taglines: [
-        "আরও বুদ্ধিমত্তার সাথে পড়ুন, কঠোরভাবে নয়।",
+        "কৌশলী পড়াশোনা।",
         "মিনিটেই নোট থেকে দক্ষতা অর্জন।",
         "আপনার নিজস্ব এআই স্টাডি পার্টনার।",
         "যেকোনো বিষয় তৎক্ষণাৎ কুইজে রূপান্তর করুন।",
@@ -361,44 +361,68 @@ const useT = () => {
 const LanguageSwitcher = ({ compact = false }) => {
   const { lang, setLang } = useLang();
   const opts = [
-    { id: "en", label: "EN", full: "English" },
-    { id: "bn", label: "বাংলা", full: "বাংলা" },
+    { id: "en", label: "EN", aria: "English" },
+    { id: "bn", label: "বাং", aria: "বাংলা" },
   ];
   return (
     <div
       data-testid="lang-switcher"
-      className="relative inline-flex items-center rounded-full border border-white/15 bg-white/[0.04] p-0.5 backdrop-blur-md"
       role="group"
       aria-label="Language"
+      className={cn(
+        "group/lang relative inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] pl-2 pr-[3px] py-[3px] backdrop-blur-xl",
+        "shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.35)]",
+        "transition-colors duration-200 hover:border-white/20 hover:bg-white/[0.06]",
+        compact && "pl-1.5 pr-[2px] py-[2px] gap-0.5"
+      )}
     >
-      <div
+      {/* Globe anchor */}
+      <span
+        aria-hidden
         className={cn(
-          "absolute top-0.5 bottom-0.5 rounded-full bg-white transition-all duration-300 ease-out",
-          lang === "en" ? "left-0.5 w-[42%]" : "left-[calc(58%)] w-[40%]"
+          "flex items-center text-white/45 transition-colors duration-200 group-hover/lang:text-white/70",
+          compact && "scale-90"
         )}
-      />
-      {opts.map((o) => {
-        const active = o.id === lang;
-        return (
-          <button
-            key={o.id}
-            data-testid={`lang-${o.id}`}
-            onClick={() => setLang(o.id)}
-            type="button"
-            className={cn(
-              "relative z-10 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-semibold transition-colors duration-200",
-              active ? "text-black" : "text-white/70 hover:text-white",
-              compact && "px-2"
-            )}
-            aria-pressed={active}
-          >
-            {o.id === "en" ? (
-              <Globe className="h-[12px] w-[12px]" strokeWidth={2.2} />
-            ) : null}
-            {o.label}
-          </button>
-        );
-      })}
+      >
+        <Globe className="h-[12px] w-[12px]" strokeWidth={2.2} />
+      </span>
+
+      {/* Segmented track */}
+      <div className="relative flex items-center">
+        {/* Sliding indicator — two equal halves, no magic numbers */}
+        <div
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute inset-y-0 left-0 w-1/2 rounded-full bg-white",
+            "shadow-[0_1px_2px_rgba(0,0,0,0.25),0_0_0_1px_rgba(0,0,0,0.04)]",
+            "transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform",
+            lang === "bn" ? "translate-x-full" : "translate-x-0"
+          )}
+        />
+        {opts.map((o) => {
+          const active = o.id === lang;
+          return (
+            <button
+              key={o.id}
+              data-testid={`lang-${o.id}`}
+              onClick={() => setLang(o.id)}
+              type="button"
+              aria-pressed={active}
+              aria-label={o.aria}
+              className={cn(
+                "relative z-10 inline-flex min-w-[40px] items-center justify-center rounded-full px-2.5 py-[5px]",
+                "text-[11px] font-semibold leading-none tracking-[0.04em]",
+                "transition-colors duration-200 ease-out",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-0",
+                active ? "text-black" : "text-white/55 hover:text-white/85",
+                compact && "min-w-[36px] px-2 py-1 text-[10.5px]"
+              )}
+            >
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };
