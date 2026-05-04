@@ -292,12 +292,7 @@ const Hero = () => {
       <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-8">
         <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1fr] lg:gap-10">
           {/* LEFT — copy */}
-          <div className="max-w-[620px]">
-            <div className="mb-5 inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/[0.04] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/85">
-              <Sparkles className="h-[11px] w-[11px]" />
-              AI-native study
-            </div>
-
+          <div className="mx-auto max-w-[620px] text-center lg:mx-0 lg:text-left">
             <h1
               className="text-[40px] font-bold leading-[1.02] tracking-tight sm:text-[56px] lg:text-[64px]"
               style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
@@ -308,13 +303,13 @@ const Hero = () => {
               </span>
             </h1>
 
-            <p className="mt-5 max-w-[520px] text-[15px] leading-relaxed text-white/65 sm:text-[16.5px]">
+            <p className="mx-auto mt-5 max-w-[520px] text-[15px] leading-relaxed text-white/65 sm:text-[16.5px] lg:mx-0">
               Turn notes, PDFs, and images into razor-sharp quizzes. Chat with
               the smartest models. Grade yourself like a real exam — all in
               one beautifully simple place.
             </p>
 
-            <div className="mt-7 flex flex-wrap items-center gap-3">
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
               <button
                 data-testid="hero-primary-cta"
                 onClick={() => navigate("/login")}
@@ -332,19 +327,6 @@ const Hero = () => {
                 See how it works
                 <ArrowUpRight className="h-[15px] w-[15px]" />
               </a>
-            </div>
-
-            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11.5px] text-white/55">
-              <span className="inline-flex items-center gap-1.5">
-                <ShieldCheck className="h-[13px] w-[13px]" /> End-to-end
-                encrypted
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <InfinityIcon className="h-[13px] w-[13px]" /> Free forever tier
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Command className="h-[13px] w-[13px]" /> Keyboard-first
-              </span>
             </div>
           </div>
 
@@ -491,73 +473,6 @@ const HeroPreview = () => (
 );
 
 /* =====================================================================
- * LOGOS / TRUST STRIP  (text-only, subtle)
- * ==================================================================== */
-const LogosBar = () => (
-  <section className="border-y border-zinc-200 bg-zinc-50/60 py-8">
-    <div className="mx-auto max-w-7xl px-5 sm:px-8">
-      <p className="mb-5 text-center text-[11.5px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-        Trusted by students at
-      </p>
-      <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-zinc-500">
-        {[
-          "STANFORD",
-          "OXFORD",
-          "IIT · BOMBAY",
-          "ETH · ZÜRICH",
-          "NUS",
-          "MIT",
-          "TSINGHUA",
-        ].map((n) => (
-          <span
-            key={n}
-            className="text-[13px] font-bold tracking-[0.18em] opacity-70"
-            style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
-          >
-            {n}
-          </span>
-        ))}
-      </div>
-    </div>
-  </section>
-);
-
-/* =====================================================================
- * STATS BAR
- * ==================================================================== */
-const StatsBar = () => {
-  const stats = [
-    { k: "8k+", v: "Students mastering topics" },
-    { k: "120k", v: "Quizzes graded this month" },
-    { k: "4.9", v: "Avg rating across 2k reviews" },
-    { k: "47s", v: "Avg time to generate a quiz" },
-  ];
-  const ref = useReveal();
-  return (
-    <section className="bg-white py-14 sm:py-20">
-      <div ref={ref} className="lp-reveal mx-auto max-w-7xl px-5 sm:px-8">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((s) => (
-            <div
-              key={s.v}
-              className="rounded-2xl border border-zinc-200 bg-white p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-black hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)]"
-            >
-              <div
-                className="text-[36px] font-bold leading-none tracking-tight text-black"
-                style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
-              >
-                {s.k}
-              </div>
-              <div className="mt-2 text-[12px] text-zinc-600">{s.v}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-/* =====================================================================
  * FEATURES GRID — 6 cards
  * ==================================================================== */
 const FEATURES = [
@@ -602,7 +517,6 @@ const FeaturesGrid = () => {
     >
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading
-          eyebrow="Features"
           title="Built for how students actually study."
           sub="Every detail designed to remove friction between you and the next concept."
         />
@@ -643,22 +557,11 @@ const FeaturesGrid = () => {
   );
 };
 
-const SectionHeading = ({ eyebrow, title, sub, onDark }) => (
+const SectionHeading = ({ title, sub, onDark }) => (
   <div className="mx-auto max-w-2xl text-center">
-    <div
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em]",
-        onDark
-          ? "border-white/20 bg-white/[0.04] text-white/85"
-          : "border-zinc-300 bg-white text-zinc-700"
-      )}
-    >
-      <Sparkle className="h-[11px] w-[11px]" />
-      {eyebrow}
-    </div>
     <h2
       className={cn(
-        "mt-4 text-[32px] font-bold leading-[1.1] tracking-tight sm:text-[42px]",
+        "text-[32px] font-bold leading-[1.1] tracking-tight sm:text-[42px]",
         onDark ? "text-white" : "text-black"
       )}
       style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
@@ -710,7 +613,6 @@ const HowItWorks = () => {
       <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading
           onDark
-          eyebrow="How it works"
           title="Three steps. Zero friction."
           sub="From a photo of your notes to a graded quiz — in under a minute."
         />
@@ -772,23 +674,19 @@ const Showcase = () => {
           ref={ref1}
           className="lp-reveal grid items-center gap-10 lg:grid-cols-2"
         >
-          <div>
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-zinc-300 bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-700">
-              <MessageSquare className="h-[11px] w-[11px]" />
-              Chat
-            </div>
+          <div className="text-center lg:text-left">
             <h3
-              className="mt-4 text-[28px] font-bold leading-tight tracking-tight text-black sm:text-[34px]"
+              className="text-[28px] font-bold leading-tight tracking-tight text-black sm:text-[34px]"
               style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
             >
               Talk to the smartest model for the job.
             </h3>
-            <p className="mt-3 max-w-md text-[14.5px] leading-relaxed text-zinc-600">
+            <p className="mx-auto mt-3 max-w-md text-[14.5px] leading-relaxed text-zinc-600 lg:mx-0">
               Gemini for multimodal, Claude for long reasoning, GPT for nuance,
               Kimi for long context. Hot-swap with a click — no new accounts,
               no copy-paste.
             </p>
-            <ul className="mt-5 space-y-2.5">
+            <ul className="mx-auto mt-5 inline-block space-y-2.5 text-left lg:mx-0 lg:block">
               {[
                 "Attach PDFs or images inline",
                 "Keep conversations, drop the ones you don't need",
@@ -957,23 +855,19 @@ const Showcase = () => {
             </div>
           </div>
 
-          <div className="order-1 lg:order-2">
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-zinc-300 bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-700">
-              <ListChecks className="h-[11px] w-[11px]" />
-              Quizzes
-            </div>
+          <div className="order-1 lg:order-2 text-center lg:text-left">
             <h3
-              className="mt-4 text-[28px] font-bold leading-tight tracking-tight text-black sm:text-[34px]"
+              className="text-[28px] font-bold leading-tight tracking-tight text-black sm:text-[34px]"
               style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
             >
               Graded like a real exam. Handwritten, even.
             </h3>
-            <p className="mt-3 max-w-md text-[14.5px] leading-relaxed text-zinc-600">
+            <p className="mx-auto mt-3 max-w-md text-[14.5px] leading-relaxed text-zinc-600 lg:mx-0">
               Options appear on paper-textured cards. Wrong picks get a red ✗,
               the right one auto-ticks. Your final sheet lands with a grade and
               a remark in red pen. Nostalgia meets clarity.
             </p>
-            <ul className="mt-5 space-y-2.5">
+            <ul className="mx-auto mt-5 inline-block space-y-2.5 text-left lg:mx-0 lg:block">
               {[
                 "A+ to F grading with a remark",
                 "Best-score memory across retries",
@@ -1027,7 +921,6 @@ const Testimonials = () => {
     <section className="relative bg-zinc-50/60 py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading
-          eyebrow="Loved by students"
           title="They were skeptical. Now they're top of the class."
         />
 
@@ -1119,7 +1012,6 @@ const Pricing = () => {
     <section id="pricing" className="bg-white py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading
-          eyebrow="Pricing"
           title="Simple. Honest. Cancel anytime."
           sub="Start free forever. Upgrade only when you want the really clever models."
         />
@@ -1254,7 +1146,6 @@ const FAQ = () => {
     <section id="faq" className="bg-white py-20 sm:py-28">
       <div className="mx-auto max-w-3xl px-5 sm:px-8">
         <SectionHeading
-          eyebrow="FAQ"
           title="Everything you were going to ask."
         />
         <div ref={ref} className="lp-reveal mt-10 space-y-2">
@@ -1326,12 +1217,8 @@ const FinalCTA = () => {
     <section className="relative overflow-hidden bg-black py-20 text-white sm:py-28">
       <DarkGridBg />
       <div className="relative z-10 mx-auto max-w-3xl px-5 text-center sm:px-8">
-        <div className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/[0.04] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/85">
-          <Sparkles className="h-[11px] w-[11px]" />
-          Ready when you are
-        </div>
         <h2
-          className="mt-5 text-[38px] font-bold leading-[1.05] tracking-tight sm:text-[52px]"
+          className="text-[38px] font-bold leading-[1.05] tracking-tight sm:text-[52px]"
           style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
         >
           Ace the next one.
@@ -1463,8 +1350,6 @@ export default function LandingPage() {
     >
       <NavBar />
       <Hero />
-      <LogosBar />
-      <StatsBar />
       <FeaturesGrid />
       <HowItWorks />
       <Showcase />

@@ -1,22 +1,30 @@
 [
   {
-    "content": "Plan landing sections: Nav, Hero (typewriter + product preview), Stats, Features, How-it-works, Product showcase, Testimonials, Pricing, FAQ, Final CTA, Footer",
+    "content": "Remove eyebrow badges from all landing sections (Features, How it works, Loved by students, Pricing, FAQ, Final CTA, AI-native study, Chat, Quizzes)",
     "status": "completed"
   },
   {
-    "content": "Create /app/frontend/src/components/LandingPage.jsx (self-contained)",
+    "content": "Remove hero trust row (End-to-end encrypted / Free forever tier / Keyboard-first)",
     "status": "completed"
   },
   {
-    "content": "Add new landing-specific CSS animations to App.css (marquee, reveal-on-scroll, tilt)",
+    "content": "Remove LogosBar section entirely",
     "status": "completed"
   },
   {
-    "content": "Restructure App.js routes: / → Landing, /app → StudyAssistant, /login → Login",
+    "content": "Remove StatsBar section entirely (8k+, 120k, 4.9, 47s)",
     "status": "completed"
   },
   {
-    "content": "Verify with esbuild + screenshot (desktop + mobile full-scroll)",
+    "content": "Strip LoginPage brand panel: remove badge, stats grid, trust row",
+    "status": "completed"
+  },
+  {
+    "content": "Mobile: center alignment + auto-responsive polish",
+    "status": "completed"
+  },
+  {
+    "content": "Verify with esbuild + screenshot",
     "status": "completed"
   }
 ]

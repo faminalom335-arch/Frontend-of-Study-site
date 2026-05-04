@@ -156,16 +156,14 @@ const BrandPanel = () => {
       <div className="lp-sweep pointer-events-none absolute inset-0" />
 
       {/* content */}
-      <div className="relative z-10 flex h-full flex-col justify-between p-10 lg:p-12">
-        <WordMark onDark />
+      <div className="relative z-10 flex h-full flex-col justify-center p-10 lg:p-12">
+        <div className="absolute left-10 top-10 lg:left-12 lg:top-12">
+          <WordMark onDark />
+        </div>
 
-        <div className="max-w-[420px]">
-          <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/[0.03] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/80">
-            <Sparkles className="h-[11px] w-[11px]" />
-            AI-native study
-          </div>
+        <div className="max-w-[460px]">
           <h1
-            className="text-[34px] font-bold leading-[1.05] tracking-tight lg:text-[42px]"
+            className="text-[36px] font-bold leading-[1.05] tracking-tight lg:text-[46px]"
             style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
           >
             <span className="block min-h-[1.2em]">
@@ -173,50 +171,10 @@ const BrandPanel = () => {
               <span className="lp-caret ml-0.5 inline-block h-[0.9em] w-[2px] translate-y-[2px] bg-white align-middle" />
             </span>
           </h1>
-          <p className="mt-4 text-[14px] leading-relaxed text-white/65">
+          <p className="mt-5 max-w-[420px] text-[14.5px] leading-relaxed text-white/65">
             Generate quizzes from any note. Chat with the smartest models.
             Track your mastery — all in one place.
           </p>
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { k: "8k+", v: "Students" },
-              { k: "120k", v: "Quizzes graded" },
-              { k: "4.9", v: "Avg rating" },
-            ].map((s) => (
-              <div
-                key={s.v}
-                className="rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 backdrop-blur-sm"
-              >
-                <div
-                  className="text-[22px] font-bold leading-none tracking-tight"
-                  style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
-                >
-                  {s.k}
-                </div>
-                <div className="mt-1 text-[10.5px] uppercase tracking-[0.14em] text-white/50">
-                  {s.v}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11.5px] text-white/55">
-            <span className="inline-flex items-center gap-1.5">
-              <ShieldCheck className="h-[13px] w-[13px]" />
-              End-to-end encrypted
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <InfinityIcon className="h-[13px] w-[13px]" />
-              Free forever tier
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <Command className="h-[13px] w-[13px]" />
-              Keyboard first
-            </span>
-          </div>
         </div>
       </div>
     </div>
