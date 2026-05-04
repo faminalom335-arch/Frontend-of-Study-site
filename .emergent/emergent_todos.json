@@ -1,18 +1,30 @@
 [
   {
-    "content": "Remove Testimonials section, component, data array, and unused Quote import",
-    "status": "completed"
+    "content": "Remove '4.9 from 8k students' chip from hero preview",
+    "status": "in_progress"
   },
   {
-    "content": "Build animated MCQShowcaseCard: 3 questions + pen-cursor tick sequence + 'checking' badge + A+ stamp",
-    "status": "completed"
+    "content": "Replace pen glyph with a black mouse/hand cursor SVG in animated MCQ paper",
+    "status": "pending"
   },
   {
-    "content": "Add CSS keyframes for check-draw, stamp-slam, pen-cursor pulse",
-    "status": "completed"
+    "content": "Remove FAQ section completely (component, data, render, nav link, anchor scroll)",
+    "status": "pending"
   },
   {
-    "content": "Verify with esbuild + screenshot (phase captures)",
-    "status": "completed"
+    "content": "Add Hind Siliguri Bangla font to index.html + set up CSS variable for display font",
+    "status": "pending"
+  },
+  {
+    "content": "Build translations (en + bn) + LangContext + useT hook + LanguageSwitcher component",
+    "status": "pending"
+  },
+  {
+    "content": "Wire all hardcoded strings through t() — nav, hero, features, how-it-works, showcase, MCQ labels, final CTA, footer",
+    "status": "pending"
+  },
+  {
+    "content": "Verify with esbuild + screenshot (both languages)",
+    "status": "pending"
   }
 ]

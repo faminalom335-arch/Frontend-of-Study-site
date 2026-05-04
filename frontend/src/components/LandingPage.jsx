@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext, createContext } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Sparkle,
@@ -46,6 +46,362 @@ import {
  * ====================================================================== */
 
 const cn = (...c) => c.filter(Boolean).join(" ");
+
+/* =====================================================================
+ * i18n — English + Bangla
+ * ---------------------------------------------------------------------
+ * Bangla translations are professionally copy-edited to feel native,
+ * keeping industry-standard technical terms (e.g. "কুইজ", "মডেল") in
+ * their established Bangla form. Typography switches to `Hind Siliguri`
+ * via the `.lang-bn` CSS class on the landing root.
+ * ==================================================================== */
+const TRANSLATIONS = {
+  en: {
+    nav: {
+      features: "Features",
+      how: "How it works",
+      signin: "Sign in",
+      cta: "Get started",
+    },
+    hero: {
+      taglines: [
+        "Study smarter, not harder.",
+        "From notes to mastery in minutes.",
+        "Your personal AI study partner.",
+        "Turn any topic into a quiz — instantly.",
+      ],
+      primary: "Get started — it's free",
+      secondary: "See how it works",
+    },
+    preview: {
+      userMsg: "Quiz me on photosynthesis — 5 questions, analyze level.",
+      assistantModel: "Gemini 3.1 Pro",
+      assistantText: "Here's a 5-question quiz at ",
+      assistantBold: "Analyze",
+      assistantTail: " level. Good luck!",
+      typing: "Typing your next question...",
+      mcqQuestion:
+        "During the light-dependent reactions, where is ATP synthesised?",
+      mcqOpts: ["Stroma", "Thylakoid membrane", "Outer envelope", "Cytosol"],
+    },
+    features: {
+      title: "Built for how students actually study.",
+      sub: "Every detail designed to remove friction between you and the next concept.",
+      learnMore: "Learn more",
+      items: [
+        {
+          title: "Notes → Quiz in seconds",
+          body: "Drop a PDF, image, or paste text. We'll craft precise MCQs tuned to your material.",
+        },
+        {
+          title: "Bloom's-style complexity",
+          body: "Recall, Apply, Analyze, Mastery. Dial the difficulty to match your exam.",
+        },
+        {
+          title: "Every frontier model",
+          body: "Switch between Gemini, Claude, GPT, and Kimi — one keyboard shortcut away.",
+        },
+        {
+          title: "Paper-style grading",
+          body: "Results arrive like a real exam paper — red-pen feedback, A+ to F grades.",
+        },
+        {
+          title: "Mastery tracking",
+          body: "Best-score memory across retries. Watch yourself get sharper, test after test.",
+        },
+        {
+          title: "Keyboard-first flow",
+          body: "Everything's ⌘K-fast. Chat, quiz, switch models, review — without a mouse.",
+        },
+      ],
+    },
+    how: {
+      title: "Three steps. Zero friction.",
+      sub: "From a photo of your notes to a graded quiz — in under a minute.",
+      stepLabel: "Step",
+      steps: [
+        {
+          title: "Drop your material",
+          body: "Notes, lecture slides, a whole textbook chapter, even a photo of the whiteboard — we read it all.",
+        },
+        {
+          title: "Pick your flavour",
+          body: "Choose a model, set the complexity, and decide whether AI should auto-tune the question count.",
+        },
+        {
+          title: "Take the exam",
+          body: "Answer in a paper-style interface. Get graded with red-pen feedback and a best-score memory.",
+        },
+      ],
+    },
+    show1: {
+      title: "Talk to the smartest model for the job.",
+      body: "Gemini for multimodal, Claude for long reasoning, GPT for nuance, Kimi for long context. Hot-swap with a click — no new accounts, no copy-paste.",
+      bullets: [
+        "Attach PDFs or images inline",
+        "Keep conversations, drop the ones you don't need",
+        "Copy, regenerate, thumbs-up in one keystroke",
+      ],
+      demoUser: "Explain backpropagation intuitively.",
+      demoModel: "Claude Sonnet 4.6",
+      demoBody:
+        "Imagine tuning a guitar by ear. You strum, hear it's off, and adjust. Backprop does the same — it strums, measures error, and nudges weights the other way.",
+      thinking: "Thinking",
+    },
+    show2: {
+      title: "Graded like a real exam. Handwritten, even.",
+      body: "Options appear on paper-textured cards. Wrong picks get a red ✗, the right one auto-ticks. Your final sheet lands with a grade and a remark in red pen. Nostalgia meets clarity.",
+      bullets: [
+        "A+ to F grading with a remark",
+        "Best-score memory across retries",
+        "Per-question explanation on demand",
+      ],
+    },
+    mcq: {
+      questions: [
+        {
+          q: "Which data structure uses LIFO order?",
+          options: ["Queue", "Stack", "Tree", "Graph"],
+        },
+        {
+          q: "Worst-case time complexity of linear search?",
+          options: ["O(1)", "O(log n)", "O(n)", "O(n²)"],
+        },
+        {
+          q: "Which algorithm has O(log n) average complexity?",
+          options: [
+            "Bubble sort",
+            "Binary search",
+            "Linear search",
+            "Depth-first search",
+          ],
+        },
+      ],
+      checking: "Checking answers…",
+      remark: "Excellent work! 3/3 ✓",
+      gradedIn: "— graded in 0.8s",
+    },
+    cta: {
+      title: "Ace the next one.",
+      sub: "Join 8,000+ students turning their notes into mastery. No card, no setup, no pressure — just smarter studying.",
+      primary: "Get started — it's free",
+    },
+    footer: {
+      tag: "Your personal AI study partner. Built for curious minds and clean desks.",
+      productT: "Product",
+      companyT: "Company",
+      resourcesT: "Resources",
+      product: ["Features", "How it works", "Changelog"],
+      company: ["About", "Blog", "Careers", "Contact"],
+      resources: ["Help center", "Terms", "Privacy", "Status"],
+      copyright: "All rights reserved.",
+      terms: "Terms",
+      privacy: "Privacy",
+      cookies: "Cookies",
+    },
+    lang: { label: "Language", en: "English", bn: "বাংলা" },
+  },
+  bn: {
+    nav: {
+      features: "ফিচারসমূহ",
+      how: "যেভাবে কাজ করে",
+      signin: "সাইন ইন",
+      cta: "শুরু করুন",
+    },
+    hero: {
+      taglines: [
+        "আরও বুদ্ধিমত্তার সাথে পড়ুন, কঠোরভাবে নয়।",
+        "মিনিটেই নোট থেকে দক্ষতা অর্জন।",
+        "আপনার নিজস্ব এআই স্টাডি পার্টনার।",
+        "যেকোনো বিষয় তৎক্ষণাৎ কুইজে রূপান্তর করুন।",
+      ],
+      primary: "শুরু করুন — সম্পূর্ণ ফ্রি",
+      secondary: "কীভাবে কাজ করে দেখুন",
+    },
+    preview: {
+      userMsg: "সালোকসংশ্লেষণ নিয়ে কুইজ দাও — ৫টি প্রশ্ন, অ্যানালাইজ লেভেলে।",
+      assistantModel: "Gemini 3.1 Pro",
+      assistantText: "এই নিন ৫টি প্রশ্নের একটি কুইজ, ",
+      assistantBold: "অ্যানালাইজ",
+      assistantTail: " লেভেলে। শুভকামনা!",
+      typing: "পরবর্তী প্রশ্ন টাইপ করছেন...",
+      mcqQuestion:
+        "সালোকসংশ্লেষণের আলোক-নির্ভর বিক্রিয়ায় ATP কোথায় সংশ্লেষিত হয়?",
+      mcqOpts: ["Stroma", "Thylakoid membrane", "Outer envelope", "Cytosol"],
+    },
+    features: {
+      title: "শিক্ষার্থীরা আসলে যেভাবে পড়ে — সেভাবেই তৈরি।",
+      sub: "প্রতিটি বিষয় এমনভাবে সাজানো, যাতে আপনি আর পরবর্তী ধারণার মাঝের প্রতিটি বাধা দূর হয়।",
+      learnMore: "আরও জানুন",
+      items: [
+        {
+          title: "নোট → মুহূর্তেই কুইজ",
+          body: "পিডিএফ, ছবি বা টেক্সট দিন। আপনার উপকরণ অনুযায়ী নিখুঁত এমসিকিউ তৈরি হবে।",
+        },
+        {
+          title: "ব্লুমের স্তরে জটিলতা",
+          body: "রিকল, অ্যাপ্লাই, অ্যানালাইজ, মাস্টারি — পরীক্ষার সাথে মিলিয়ে কঠিনতা বেছে নিন।",
+        },
+        {
+          title: "সেরা সব এআই মডেল",
+          body: "Gemini, Claude, GPT ও Kimi — এক ক্লিকেই মডেল বদলান।",
+        },
+        {
+          title: "পরীক্ষার খাতার মতো মূল্যায়ন",
+          body: "ফলাফল আসে আসল পরীক্ষার খাতার মতো — লাল কলমের মন্তব্য আর A+ থেকে F গ্রেডসহ।",
+        },
+        {
+          title: "অগ্রগতির হিসাব",
+          body: "প্রতিটি রিট্রাইয়ে সেরা স্কোর মনে রাখা হয়। পরীক্ষা যত দেবেন, ততই ধারালো হবেন।",
+        },
+        {
+          title: "কিবোর্ড-প্রথম ওয়ার্কফ্লো",
+          body: "সবকিছু ⌘K-দ্রুত। চ্যাট, কুইজ, মডেল বদল — মাউস ছাড়াই।",
+        },
+      ],
+    },
+    how: {
+      title: "তিনটি ধাপ। কোনো ঝামেলা নেই।",
+      sub: "আপনার নোটের ছবি থেকে গ্রেডেড কুইজ — এক মিনিটেরও কম সময়ে।",
+      stepLabel: "ধাপ",
+      steps: [
+        {
+          title: "আপনার পড়ার উপকরণ দিন",
+          body: "নোট, লেকচার স্লাইড, পুরো অধ্যায়, এমনকি হোয়াইটবোর্ডের ছবি — আমরা সবই পড়তে পারি।",
+        },
+        {
+          title: "আপনার পছন্দ বেছে নিন",
+          body: "মডেল নির্বাচন করুন, জটিলতা ঠিক করুন, আর প্রশ্নের সংখ্যা নিজে দিন বা এআইকে বলুন।",
+        },
+        {
+          title: "পরীক্ষা দিন",
+          body: "কাগজের মতো ইন্টারফেসে উত্তর দিন। লাল কলমের ফিডব্যাক ও সেরা স্কোরের মেমরিসহ গ্রেড পান।",
+        },
+      ],
+    },
+    show1: {
+      title: "যে কাজের জন্য, সেই সেরা মডেলের সাথে কথা বলুন।",
+      body: "ছবির জন্য Gemini, লম্বা যুক্তির জন্য Claude, সূক্ষ্মতার জন্য GPT, বড় কনটেক্সটের জন্য Kimi। এক ক্লিকেই বদলান — নতুন অ্যাকাউন্ট লাগবে না, কপি-পেস্ট লাগবে না।",
+      bullets: [
+        "সরাসরি পিডিএফ বা ছবি যুক্ত করুন",
+        "পছন্দের কনভারসেশন রাখুন, বাকিগুলো মুছে দিন",
+        "এক কী-প্রেসেই কপি, রিজেনারেট বা থাম্বস-আপ",
+      ],
+      demoUser: "ব্যাকপ্রোপাগেশন সহজভাবে বুঝিয়ে দাও।",
+      demoModel: "Claude Sonnet 4.6",
+      demoBody:
+        "ভাবুন একটি গিটার কান দিয়ে টিউন করছেন। তার ধরলেন, বেসুরো শুনলেন, আর ঠিক করলেন। ব্যাকপ্রোপ ঠিক তাই করে — তার বাজায়, ভুল মাপে, আর ওজনগুলোকে উল্টো দিকে ঠেলে।",
+      thinking: "চিন্তা করছে",
+    },
+    show2: {
+      title: "আসল পরীক্ষার মতো মূল্যায়ন। হাতের লেখার অনুভূতি সহ।",
+      body: "অপশনগুলো কাগজের মতো কার্ডে দেখানো হয়। ভুল পছন্দে লাল ✗, সঠিকটিতে স্বয়ংক্রিয় ✓। ফাইনাল শিটে আসে গ্রেড আর লাল কলমের মন্তব্য। স্মৃতি আর স্পষ্টতার মিলন।",
+      bullets: [
+        "A+ থেকে F গ্রেড, সাথে মন্তব্য",
+        "প্রতিটি রিট্রাইয়ে সেরা স্কোর মনে রাখে",
+        "প্রশ্নভিত্তিক ব্যাখ্যা চাইলেই মিলবে",
+      ],
+    },
+    mcq: {
+      questions: [
+        {
+          q: "কোন ডেটা স্ট্রাকচারে LIFO পদ্ধতি ব্যবহৃত হয়?",
+          options: ["Queue", "Stack", "Tree", "Graph"],
+        },
+        {
+          q: "লিনিয়ার সার্চের সর্বোচ্চ সময়-জটিলতা কোনটি?",
+          options: ["O(1)", "O(log n)", "O(n)", "O(n²)"],
+        },
+        {
+          q: "কোন অ্যালগরিদমের গড় সময়-জটিলতা O(log n)?",
+          options: [
+            "Bubble sort",
+            "Binary search",
+            "Linear search",
+            "Depth-first search",
+          ],
+        },
+      ],
+      checking: "উত্তর যাচাই করা হচ্ছে…",
+      remark: "চমৎকার! ৩/৩ ✓",
+      gradedIn: "— ০.৮ সেকেন্ডে গ্রেডেড",
+    },
+    cta: {
+      title: "পরবর্তী পরীক্ষায় বাজিমাত।",
+      sub: "৮,০০০+ শিক্ষার্থীর সাথে যোগ দিন — যারা নোট থেকে দক্ষতা তৈরি করছে। কার্ড লাগবে না, সেটআপ লাগবে না — শুধু আরও বুদ্ধিমত্তার সাথে পড়াশোনা।",
+      primary: "শুরু করুন — সম্পূর্ণ ফ্রি",
+    },
+    footer: {
+      tag: "আপনার নিজস্ব এআই স্টাডি পার্টনার। কৌতূহলী মন আর পরিপাটি ডেস্কের জন্য তৈরি।",
+      productT: "প্রোডাক্ট",
+      companyT: "কোম্পানি",
+      resourcesT: "রিসোর্স",
+      product: ["ফিচারসমূহ", "যেভাবে কাজ করে", "চেঞ্জলগ"],
+      company: ["আমাদের সম্পর্কে", "ব্লগ", "ক্যারিয়ার", "যোগাযোগ"],
+      resources: ["হেল্প সেন্টার", "শর্তাবলী", "গোপনীয়তা", "স্ট্যাটাস"],
+      copyright: "সর্বস্বত্ব সংরক্ষিত।",
+      terms: "শর্তাবলী",
+      privacy: "গোপনীয়তা",
+      cookies: "কুকিজ",
+    },
+    lang: { label: "ভাষা", en: "English", bn: "বাংলা" },
+  },
+};
+
+const LANG_STORAGE_KEY = "landing:lang";
+const LangContext = createContext({ lang: "en", setLang: () => {} });
+const useLang = () => useContext(LangContext);
+const useT = () => {
+  const { lang } = useLang();
+  return (path) =>
+    path.split(".").reduce((o, k) => (o == null ? o : o[k]), TRANSLATIONS[lang]);
+};
+
+/* ---------- Language switcher (segmented pill) ---------- */
+const LanguageSwitcher = ({ compact = false }) => {
+  const { lang, setLang } = useLang();
+  const opts = [
+    { id: "en", label: "EN", full: "English" },
+    { id: "bn", label: "বাংলা", full: "বাংলা" },
+  ];
+  return (
+    <div
+      data-testid="lang-switcher"
+      className="relative inline-flex items-center rounded-full border border-white/15 bg-white/[0.04] p-0.5 backdrop-blur-md"
+      role="group"
+      aria-label="Language"
+    >
+      <div
+        className={cn(
+          "absolute top-0.5 bottom-0.5 rounded-full bg-white transition-all duration-300 ease-out",
+          lang === "en" ? "left-0.5 w-[42%]" : "left-[calc(58%)] w-[40%]"
+        )}
+      />
+      {opts.map((o) => {
+        const active = o.id === lang;
+        return (
+          <button
+            key={o.id}
+            data-testid={`lang-${o.id}`}
+            onClick={() => setLang(o.id)}
+            type="button"
+            className={cn(
+              "relative z-10 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-semibold transition-colors duration-200",
+              active ? "text-black" : "text-white/70 hover:text-white",
+              compact && "px-2"
+            )}
+            aria-pressed={active}
+          >
+            {o.id === "en" ? (
+              <Globe className="h-[12px] w-[12px]" strokeWidth={2.2} />
+            ) : null}
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
 
 /* ---------------- shared bits ---------------- */
 const WordMark = ({ onDark = true, size = "md" }) => {
@@ -145,6 +501,7 @@ const useReveal = () => {
  * ==================================================================== */
 const NavBar = () => {
   const navigate = useNavigate();
+  const t = useT();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -156,9 +513,8 @@ const NavBar = () => {
   }, []);
 
   const links = [
-    { label: "Features", href: "#features" },
-    { label: "How it works", href: "#how" },
-    { label: "FAQ", href: "#faq" },
+    { label: t("nav.features"), href: "#features" },
+    { label: t("nav.how"), href: "#how" },
   ];
 
   return (
@@ -188,31 +544,35 @@ const NavBar = () => {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
+          <LanguageSwitcher />
           <button
             data-testid="nav-signin"
             onClick={() => navigate("/login")}
             className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-white/80 transition hover:bg-white/5 hover:text-white"
           >
-            Sign in
+            {t("nav.signin")}
           </button>
           <button
             data-testid="nav-cta"
             onClick={() => navigate("/login")}
             className="group inline-flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-1.5 text-[13px] font-semibold text-black transition hover:bg-zinc-200 active:scale-[0.98]"
           >
-            Get started
+            {t("nav.cta")}
             <ArrowRight className="h-[14px] w-[14px] transition-transform duration-200 group-hover:translate-x-0.5" />
           </button>
         </div>
 
         {/* mobile */}
-        <button
-          onClick={() => setMenuOpen((v) => !v)}
-          aria-label="Menu"
-          className="flex h-9 w-9 items-center justify-center rounded-md text-white/80 md:hidden"
-        >
-          {menuOpen ? <XIcon className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          <LanguageSwitcher compact />
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label="Menu"
+            className="flex h-9 w-9 items-center justify-center rounded-md text-white/80"
+          >
+            {menuOpen ? <XIcon className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
 
       {/* mobile drawer */}
@@ -236,7 +596,7 @@ const NavBar = () => {
               }}
               className="mt-2 rounded-lg bg-white px-3 py-2 text-[14px] font-semibold text-black"
             >
-              Get started
+              {t("nav.cta")}
             </button>
           </div>
         </div>
@@ -246,27 +606,29 @@ const NavBar = () => {
 };
 
 /* =====================================================================
- * HERO — black, typewriter + product preview card
+ * HERO — black, modern word-stagger headline + product preview
  * ==================================================================== */
-const TAGLINES = [
-  "Study smarter, not harder.",
-  "From notes to mastery in minutes.",
-  "Your personal AI study partner.",
-  "Turn any topic into a quiz — instantly.",
-];
-
 const Hero = () => {
   const navigate = useNavigate();
+  const t = useT();
+  const { lang } = useLang();
+  const taglines = t("hero.taglines");
   const [idx, setIdx] = useState(0);
 
   // Cycle taglines — each new line is rendered via key re-mount which
   // re-triggers the word-by-word blur-slide animation below.
   useEffect(() => {
-    const t = setTimeout(() => setIdx((i) => (i + 1) % TAGLINES.length), 3800);
-    return () => clearTimeout(t);
-  }, [idx]);
+    const n = taglines.length;
+    const t2 = setTimeout(() => setIdx((i) => (i + 1) % n), 3800);
+    return () => clearTimeout(t2);
+  }, [idx, taglines]);
 
-  const words = TAGLINES[idx].split(" ");
+  // Reset idx when language changes so we start fresh
+  useEffect(() => {
+    setIdx(0);
+  }, [lang]);
+
+  const words = (taglines[idx] || "").split(" ");
 
   return (
     <section
@@ -309,7 +671,7 @@ const Hero = () => {
                 className="group relative inline-flex h-12 items-center gap-2 overflow-hidden rounded-xl bg-white px-5 text-[14px] font-semibold text-black transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(255,255,255,0.25)] active:translate-y-0 active:scale-[0.99]"
               >
                 <span className="lp-shine pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-black/[0.08] to-transparent" />
-                Get started — it's free
+                {t("hero.primary")}
                 <ArrowRight className="h-[15px] w-[15px] transition-transform duration-200 group-hover:translate-x-0.5" />
               </button>
               <a
@@ -317,7 +679,7 @@ const Hero = () => {
                 href="#how"
                 className="inline-flex h-12 items-center gap-2 rounded-xl border border-white/20 bg-white/[0.03] px-5 text-[14px] font-semibold text-white transition hover:border-white/40 hover:bg-white/[0.08]"
               >
-                See how it works
+                {t("hero.secondary")}
                 <ArrowUpRight className="h-[15px] w-[15px]" />
               </a>
             </div>
@@ -397,7 +759,9 @@ const TiltCard = ({
 };
 
 /* ---------- Hero product preview (stylised app mock) ---------- */
-const HeroPreview = () => (
+const HeroPreview = () => {
+  const t = useT();
+  return (
   <div className="relative mx-auto w-full max-w-[560px] lg:ml-auto">
     {/* Drifting ambient light */}
     <div className="pointer-events-none absolute -inset-6 rounded-[32px] bg-white/[0.04] blur-2xl" />
@@ -425,7 +789,7 @@ const HeroPreview = () => (
           {/* user */}
           <div className="flex justify-end">
             <div className="max-w-[80%] rounded-2xl bg-black px-3.5 py-2 text-[12.5px] text-white">
-              Quiz me on photosynthesis — 5 questions, analyze level.
+              {t("preview.userMsg")}
             </div>
           </div>
           {/* assistant */}
@@ -435,10 +799,11 @@ const HeroPreview = () => (
             </div>
             <div className="max-w-[85%] rounded-2xl border border-zinc-200 bg-white px-3.5 py-2.5 text-[12.5px]">
               <div className="mb-1 text-[9.5px] font-semibold uppercase tracking-wider text-zinc-500">
-                Gemini 3.1 Pro
+                {t("preview.assistantModel")}
               </div>
-              Here's a 5-question quiz at{" "}
-              <span className="font-semibold">Analyze</span> level. Good luck!
+              {t("preview.assistantText")}
+              <span className="font-semibold">{t("preview.assistantBold")}</span>
+              {t("preview.assistantTail")}
             </div>
           </div>
 
@@ -467,99 +832,59 @@ const HeroPreview = () => (
                 Q1
               </span>
               <div className="text-[12px] font-semibold text-[#2a2218]">
-                During the light-dependent reactions, where is ATP synthesised?
+                {t("preview.mcqQuestion")}
               </div>
             </div>
             <div className="relative mt-2 grid grid-cols-2 gap-1.5 text-[11px] text-[#2a2218]">
-              {[
-                { t: "Stroma", ok: false, picked: false },
-                { t: "Thylakoid membrane", ok: true, picked: true },
-                { t: "Outer envelope", ok: false, picked: false },
-                { t: "Cytosol", ok: false, picked: false },
-              ].map((o) => (
-                <div
-                  key={o.t}
-                  className="flex items-center gap-1.5 rounded-md border px-1.5 py-1"
-                  style={{
-                    borderColor: o.ok ? "#2a2218" : "rgba(139,101,45,0.35)",
-                    background: o.ok ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.35)",
-                  }}
-                >
-                  <span
-                    className="flex h-3.5 w-3.5 items-center justify-center rounded-sm border-[1.5px]"
+              {t("preview.mcqOpts").map((name, i) => {
+                const ok = i === 1; // Thylakoid membrane is correct
+                return (
+                  <div
+                    key={name}
+                    className="flex items-center gap-1.5 rounded-md border px-1.5 py-1"
                     style={{
-                      borderColor: o.ok ? "#2a2218" : "#8a7348",
-                      background: o.ok ? "#fbf4de" : "rgba(255,255,255,0.6)",
+                      borderColor: ok ? "#2a2218" : "rgba(139,101,45,0.35)",
+                      background: ok ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.35)",
                     }}
                   >
-                    {o.ok && <Check className="h-[9px] w-[9px]" strokeWidth={3} />}
-                  </span>
-                  <span style={{ fontFamily: "'Edu VIC WA NT Beginner', cursive" }}>
-                    {o.t}
-                  </span>
-                </div>
-              ))}
+                    <span
+                      className="flex h-3.5 w-3.5 items-center justify-center rounded-sm border-[1.5px]"
+                      style={{
+                        borderColor: ok ? "#2a2218" : "#8a7348",
+                        background: ok ? "#fbf4de" : "rgba(255,255,255,0.6)",
+                      }}
+                    >
+                      {ok && <Check className="h-[9px] w-[9px]" strokeWidth={3} />}
+                    </span>
+                    <span style={{ fontFamily: "'Edu VIC WA NT Beginner', cursive" }}>
+                      {name}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
           <div className="flex items-center gap-2 rounded-lg bg-zinc-50 px-3 py-2 text-[11px] text-zinc-600">
             <Sparkles className="h-[11px] w-[11px]" />
-            Typing your next question...
+            {t("preview.typing")}
           </div>
         </div>
       </div>
     </TiltCard>
-
-    {/* Floating review chip */}
-    <div className="lp-float-y absolute -bottom-4 right-0 hidden items-center gap-2 rounded-xl border border-white/10 bg-black/80 px-3 py-2 text-white shadow-[0_10px_30px_rgba(0,0,0,0.45)] backdrop-blur-lg sm:flex">
-      <div className="flex gap-0.5">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <Star key={i} className="h-[12px] w-[12px] fill-white text-white" />
-        ))}
-      </div>
-      <div className="text-[11.5px] font-semibold">4.9 from 8k students</div>
-    </div>
   </div>
-);
+  );
+};
 
 /* =====================================================================
  * FEATURES GRID — 6 cards
  * ==================================================================== */
-const FEATURES = [
-  {
-    Icon: Upload,
-    title: "Notes → Quiz in seconds",
-    body: "Drop a PDF, image, or paste text. We'll craft precise MCQs tuned to your material.",
-  },
-  {
-    Icon: Brain,
-    title: "Bloom's-style complexity",
-    body: "Recall, Apply, Analyze, Mastery. Dial the difficulty to match your exam.",
-  },
-  {
-    Icon: Cpu,
-    title: "Every frontier model",
-    body: "Switch between Gemini, Claude, GPT, and Kimi — one keyboard shortcut away.",
-  },
-  {
-    Icon: FileText,
-    title: "Paper-style grading",
-    body: "Results arrive like a real exam paper — red-pen feedback, A+ to F grades.",
-  },
-  {
-    Icon: BarChart3,
-    title: "Mastery tracking",
-    body: "Best-score memory across retries. Watch yourself get sharper, test after test.",
-  },
-  {
-    Icon: Keyboard,
-    title: "Keyboard-first flow",
-    body: "Everything's ⌘K-fast. Chat, quiz, switch models, review — without a mouse.",
-  },
-];
+const FEATURE_ICONS = [Upload, Brain, Cpu, FileText, BarChart3, Keyboard];
 
 const FeaturesGrid = () => {
+  const t = useT();
   const ref = useReveal();
+  const items = t("features.items");
   return (
     <section
       id="features"
@@ -567,47 +892,50 @@ const FeaturesGrid = () => {
     >
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading
-          title="Built for how students actually study."
-          sub="Every detail designed to remove friction between you and the next concept."
+          title={t("features.title")}
+          sub={t("features.sub")}
         />
 
         <div
           ref={ref}
           className="lp-reveal mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
         >
-          {FEATURES.map(({ Icon, title, body }, i) => (
-            <TiltCard
-              key={title}
-              testId={`feature-card-${i}`}
-              max={8}
-              glare="dark"
-              className="rounded-2xl"
-            >
-              <div
-                className="group relative h-full overflow-hidden rounded-2xl border border-zinc-200 bg-white p-6 transition-all duration-300 hover:border-black hover:shadow-[0_18px_40px_rgba(0,0,0,0.08)]"
-                style={{ transitionDelay: `${i * 20}ms` }}
+          {items.map(({ title, body }, i) => {
+            const Icon = FEATURE_ICONS[i] || Sparkle;
+            return (
+              <TiltCard
+                key={title}
+                testId={`feature-card-${i}`}
+                max={8}
+                glare="dark"
+                className="rounded-2xl"
               >
-                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-black text-white transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">
-                  <Icon className="h-[18px] w-[18px]" strokeWidth={2} />
-                </div>
-                <h3
-                  className="text-[16.5px] font-bold text-black"
-                  style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
+                <div
+                  className="group relative h-full overflow-hidden rounded-2xl border border-zinc-200 bg-white p-6 transition-all duration-300 hover:border-black hover:shadow-[0_18px_40px_rgba(0,0,0,0.08)]"
+                  style={{ transitionDelay: `${i * 20}ms` }}
                 >
-                  {title}
-                </h3>
-                <p className="mt-1.5 text-[13px] leading-relaxed text-zinc-600">
-                  {body}
-                </p>
-                <div className="mt-4 inline-flex items-center gap-1 text-[12px] font-semibold text-zinc-400 transition-colors duration-300 group-hover:text-black">
-                  Learn more
-                  <ArrowUpRight className="h-[13px] w-[13px]" />
+                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-black text-white transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">
+                    <Icon className="h-[18px] w-[18px]" strokeWidth={2} />
+                  </div>
+                  <h3
+                    className="text-[16.5px] font-bold text-black"
+                    style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
+                  >
+                    {title}
+                  </h3>
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-zinc-600">
+                    {body}
+                  </p>
+                  <div className="mt-4 inline-flex items-center gap-1 text-[12px] font-semibold text-zinc-400 transition-colors duration-300 group-hover:text-black">
+                    {t("features.learnMore")}
+                    <ArrowUpRight className="h-[13px] w-[13px]" />
+                  </div>
+                  {/* corner glow */}
+                  <div className="pointer-events-none absolute -right-16 -top-16 h-32 w-32 rounded-full bg-black/[0.03] blur-2xl transition-all duration-500 group-hover:bg-black/[0.06]" />
                 </div>
-                {/* corner glow */}
-                <div className="pointer-events-none absolute -right-16 -top-16 h-32 w-32 rounded-full bg-black/[0.03] blur-2xl transition-all duration-500 group-hover:bg-black/[0.06]" />
-              </div>
-            </TiltCard>
-          ))}
+              </TiltCard>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -641,25 +969,11 @@ const SectionHeading = ({ title, sub, onDark }) => (
 /* =====================================================================
  * HOW IT WORKS — 3 numbered steps, black section
  * ==================================================================== */
-const STEPS = [
-  {
-    Icon: Upload,
-    title: "Drop your material",
-    body: "Notes, lecture slides, a whole textbook chapter, even a photo of the whiteboard — we read it all.",
-  },
-  {
-    Icon: Sparkles,
-    title: "Pick your flavour",
-    body: "Choose a model, set the complexity, and decide whether AI should auto-tune the question count.",
-  },
-  {
-    Icon: ListChecks,
-    title: "Take the exam",
-    body: "Answer in a paper-style interface. Get graded with red-pen feedback and a best-score memory.",
-  },
-];
+const STEP_ICONS = [Upload, Sparkles, ListChecks];
 
 const HowItWorks = () => {
+  const t = useT();
+  const steps = t("how.steps");
   const ref = useReveal();
   return (
     <section
@@ -670,52 +984,55 @@ const HowItWorks = () => {
       <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading
           onDark
-          title="Three steps. Zero friction."
-          sub="From a photo of your notes to a graded quiz — in under a minute."
+          title={t("how.title")}
+          sub={t("how.sub")}
         />
 
         <div ref={ref} className="lp-reveal mt-14 grid gap-4 md:grid-cols-3">
-          {STEPS.map(({ Icon, title, body }, i) => (
-            <TiltCard
-              key={title}
-              testId={`step-card-${i}`}
-              max={9}
-              glare="light"
-              className="rounded-2xl"
-            >
-              <div className="relative h-full rounded-2xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-sm transition-all duration-300 hover:border-white/30 hover:bg-white/[0.04]">
-                {/* big number behind */}
-                <div
-                  className="pointer-events-none absolute right-4 top-2 text-[84px] font-black leading-none tracking-tight text-white/[0.05]"
-                  style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
-                >
-                  0{i + 1}
-                </div>
-                <div className="relative mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-white text-black">
-                  <Icon className="h-[19px] w-[19px]" strokeWidth={2} />
-                </div>
-                <div className="relative text-[11px] font-semibold uppercase tracking-[0.16em] text-white/50">
-                  Step {i + 1}
-                </div>
-                <h3
-                  className="relative mt-1 text-[18px] font-bold leading-snug"
-                  style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
-                >
-                  {title}
-                </h3>
-                <p className="relative mt-2 text-[13.5px] leading-relaxed text-white/65">
-                  {body}
-                </p>
-
-                {/* connector arrow */}
-                {i < STEPS.length - 1 && (
-                  <div className="pointer-events-none absolute -right-2 top-1/2 hidden -translate-y-1/2 translate-x-full text-white/20 md:block">
-                    <ArrowRight className="h-5 w-5" />
+          {steps.map(({ title, body }, i) => {
+            const Icon = STEP_ICONS[i] || Sparkle;
+            return (
+              <TiltCard
+                key={title}
+                testId={`step-card-${i}`}
+                max={9}
+                glare="light"
+                className="rounded-2xl"
+              >
+                <div className="relative h-full rounded-2xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-sm transition-all duration-300 hover:border-white/30 hover:bg-white/[0.04]">
+                  {/* big number behind */}
+                  <div
+                    className="pointer-events-none absolute right-4 top-2 text-[84px] font-black leading-none tracking-tight text-white/[0.05]"
+                    style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
+                  >
+                    0{i + 1}
                   </div>
-                )}
-              </div>
-            </TiltCard>
-          ))}
+                  <div className="relative mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-white text-black">
+                    <Icon className="h-[19px] w-[19px]" strokeWidth={2} />
+                  </div>
+                  <div className="relative text-[11px] font-semibold uppercase tracking-[0.16em] text-white/50">
+                    {t("how.stepLabel")} {i + 1}
+                  </div>
+                  <h3
+                    className="relative mt-1 text-[18px] font-bold leading-snug"
+                    style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
+                  >
+                    {title}
+                  </h3>
+                  <p className="relative mt-2 text-[13.5px] leading-relaxed text-white/65">
+                    {body}
+                  </p>
+
+                  {/* connector arrow */}
+                  {i < steps.length - 1 && (
+                    <div className="pointer-events-none absolute -right-2 top-1/2 hidden -translate-y-1/2 translate-x-full text-white/20 md:block">
+                      <ArrowRight className="h-5 w-5" />
+                    </div>
+                  )}
+                </div>
+              </TiltCard>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -735,34 +1052,22 @@ const HowItWorks = () => {
  *   5  Graded: A+ stamp slams in       — 2600ms hold
  * (then restarts from 0)
  * ==================================================================== */
-const MCQ_QS = [
-  {
-    q: "Which data structure uses LIFO order?",
-    options: ["Queue", "Stack", "Tree", "Graph"],
-    correct: 1,
-  },
-  {
-    q: "Worst-case time complexity of linear search?",
-    options: ["O(1)", "O(log n)", "O(n)", "O(n²)"],
-    correct: 2,
-  },
-  {
-    q: "Which algorithm has O(log n) average complexity?",
-    options: ["Bubble sort", "Binary search", "Linear search", "Depth-first search"],
-    correct: 1,
-  },
-];
+const MCQ_QS = null; // (deprecated — questions now read from translations)
 
 const PHASE_DURATIONS = [900, 420, 420, 420, 1100, 2600];
 
 const AnimatedMCQPaper = () => {
+  const t = useT();
+  const questions = t("mcq.questions");
+  // correct answer index for each of the 3 hard-coded quizzes (language-agnostic)
+  const CORRECTS = [1, 2, 1]; // Stack, O(n), Binary search
   const [phase, setPhase] = useState(0);
 
   useEffect(() => {
-    const t = setTimeout(() => {
+    const t2 = setTimeout(() => {
       setPhase((p) => (p + 1) % PHASE_DURATIONS.length);
     }, PHASE_DURATIONS[phase]);
-    return () => clearTimeout(t);
+    return () => clearTimeout(t2);
   }, [phase]);
 
   // phase → which questions are "already answered" (check visible)
@@ -810,9 +1115,10 @@ const AnimatedMCQPaper = () => {
 
         {/* questions */}
         <div className="relative space-y-4">
-          {MCQ_QS.map((q, qi) => {
+          {questions.map((q, qi) => {
             const answered = isAnswered(qi);
             const active = isActive(qi);
+            const correctIdx = CORRECTS[qi];
             return (
               <div key={qi} data-testid={`mcq-q-${qi}`}>
                 <div className="mb-2 flex items-start gap-2">
@@ -835,7 +1141,7 @@ const AnimatedMCQPaper = () => {
                 </div>
                 <div className="grid gap-1.5 sm:grid-cols-2">
                   {q.options.map((opt, oi) => {
-                    const isCorrect = oi === q.correct;
+                    const isCorrect = oi === correctIdx;
                     const showTick = answered && isCorrect;
                     const showActive = active && isCorrect;
                     return (
@@ -942,7 +1248,7 @@ const AnimatedMCQPaper = () => {
               style={{ background: "#2a2218" }}
             />
           </span>
-          Checking answers…
+          {t("mcq.checking")}
         </div>
 
         {/* final handwritten remark when graded */}
@@ -960,7 +1266,7 @@ const AnimatedMCQPaper = () => {
               fontSize: "14px",
             }}
           >
-            Excellent work! 3/3 ✓
+            {t("mcq.remark")}
           </span>
           <span
             style={{
@@ -969,7 +1275,7 @@ const AnimatedMCQPaper = () => {
               opacity: 0.85,
             }}
           >
-            — graded in 0.8s
+            {t("mcq.gradedIn")}
           </span>
         </div>
       </div>
@@ -1003,23 +1309,22 @@ const AnimatedMCQPaper = () => {
   );
 };
 
-/* Tiny pen glyph used for the "student is picking an answer" flourish */
+/* Classic mouse-cursor arrow — black fill, subtle white outline for visibility. */
 const PenGlyph = () => (
   <svg
     viewBox="0 0 24 24"
-    width="16"
-    height="16"
-    fill="none"
-    stroke="#2a2218"
-    strokeWidth="2"
-    strokeLinecap="round"
+    width="18"
+    height="18"
+    fill="#0a0a0a"
+    stroke="#ffffff"
+    strokeWidth="1"
     strokeLinejoin="round"
-    style={{ transform: "rotate(14deg)" }}
+    style={{
+      transform: "rotate(-8deg)",
+      filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.28))",
+    }}
   >
-    <path d="M12 19l7-7 3 3-7 7-3-3z" />
-    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18" />
-    <path d="M2 2l7.586 7.586" />
-    <circle cx="11" cy="11" r="1.5" fill="#2a2218" />
+    <path d="M5 2 L5 18 L9.2 14.2 L11.4 20 L14.1 18.8 L11.9 13 L17.5 13 Z" />
   </svg>
 );
 
@@ -1028,6 +1333,7 @@ const PenGlyph = () => (
  * SHOWCASE — alternating feature+visual rows
  * ==================================================================== */
 const Showcase = () => {
+  const t = useT();
   const ref1 = useReveal();
   const ref2 = useReveal();
   return (
@@ -1043,24 +1349,18 @@ const Showcase = () => {
               className="text-[28px] font-bold leading-tight tracking-tight text-black sm:text-[34px]"
               style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
             >
-              Talk to the smartest model for the job.
+              {t("show1.title")}
             </h3>
             <p className="mx-auto mt-3 max-w-md text-[14.5px] leading-relaxed text-zinc-600 lg:mx-0">
-              Gemini for multimodal, Claude for long reasoning, GPT for nuance,
-              Kimi for long context. Hot-swap with a click — no new accounts,
-              no copy-paste.
+              {t("show1.body")}
             </p>
             <ul className="mx-auto mt-5 inline-block space-y-2.5 text-left lg:mx-0 lg:block">
-              {[
-                "Attach PDFs or images inline",
-                "Keep conversations, drop the ones you don't need",
-                "Copy, regenerate, thumbs-up in one keystroke",
-              ].map((t) => (
-                <li key={t} className="flex items-start gap-2.5 text-[13.5px] text-zinc-700">
+              {t("show1.bullets").map((line) => (
+                <li key={line} className="flex items-start gap-2.5 text-[13.5px] text-zinc-700">
                   <span className="mt-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-black text-white">
                     <Check className="h-[10px] w-[10px]" strokeWidth={3} />
                   </span>
-                  {t}
+                  {line}
                 </li>
               ))}
             </ul>
@@ -1072,7 +1372,7 @@ const Showcase = () => {
               <div className="space-y-3">
                 <div className="flex justify-end">
                   <div className="max-w-[80%] rounded-2xl bg-black px-4 py-2.5 text-[13px] text-white">
-                    Explain backpropagation intuitively.
+                    {t("show1.demoUser")}
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -1081,11 +1381,9 @@ const Showcase = () => {
                   </div>
                   <div className="max-w-[85%] rounded-2xl border border-zinc-200 bg-white px-4 py-2.5 text-[13px]">
                     <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
-                      Claude Sonnet 4.6
+                      {t("show1.demoModel")}
                     </div>
-                    Imagine tuning a guitar by ear. You strum, hear it's off,
-                    and adjust. Backprop does the same — it strums, measures
-                    error, and nudges weights the other way.
+                    {t("show1.demoBody")}
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -1099,7 +1397,7 @@ const Showcase = () => {
                       <span className="sa-eq-bar" style={{ height: 12 }} />
                       <span className="sa-eq-bar" style={{ height: 12 }} />
                     </div>
-                    <span className="sa-shimmer-text">Thinking</span>
+                    <span className="sa-shimmer-text">{t("show1.thinking")}</span>
                   </div>
                 </div>
               </div>
@@ -1121,27 +1419,21 @@ const Showcase = () => {
               className="text-[28px] font-bold leading-tight tracking-tight text-black sm:text-[34px]"
               style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
             >
-              Graded like a real exam. Handwritten, even.
+              {t("show2.title")}
             </h3>
             <p className="mx-auto mt-3 max-w-md text-[14.5px] leading-relaxed text-zinc-600 lg:mx-0">
-              Options appear on paper-textured cards. Wrong picks get a red ✗,
-              the right one auto-ticks. Your final sheet lands with a grade and
-              a remark in red pen. Nostalgia meets clarity.
+              {t("show2.body")}
             </p>
             <ul className="mx-auto mt-5 inline-block space-y-2.5 text-left lg:mx-0 lg:block">
-              {[
-                "A+ to F grading with a remark",
-                "Best-score memory across retries",
-                "Per-question explanation on demand",
-              ].map((t) => (
+              {t("show2.bullets").map((line) => (
                 <li
-                  key={t}
+                  key={line}
                   className="flex items-start gap-2.5 text-[13.5px] text-zinc-700"
                 >
                   <span className="mt-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-black text-white">
                     <Check className="h-[10px] w-[10px]" strokeWidth={3} />
                   </span>
-                  {t}
+                  {line}
                 </li>
               ))}
             </ul>
@@ -1153,109 +1445,11 @@ const Showcase = () => {
 };
 
 /* =====================================================================
- * FAQ
- * ==================================================================== */
-const FAQS = [
-  {
-    q: "Do I need my own API keys?",
-    a: "No. The Free tier works out of the box with our included models. You can also bring your own key later if you want absolute control.",
-  },
-  {
-    q: "Is my study material stored anywhere?",
-    a: "Your notes and quizzes are encrypted in transit. On the Free plan, history lives locally in your browser. Pro adds end-to-end-encrypted cloud sync.",
-  },
-  {
-    q: "What file types can I upload?",
-    a: "PDFs, images (JPG / PNG / HEIC / WEBP), plain text, and direct paste. We extract the learning surface automatically.",
-  },
-  {
-    q: "Which models are included?",
-    a: "Free: our smaller-but-smart tier. Pro: every frontier model — Gemini 3.1 Pro, Claude Sonnet 4.6 & Opus 4.5, GPT-5.2, Kimi K2 — switchable mid-chat.",
-  },
-  {
-    q: "Can I cancel anytime?",
-    a: "Yes. One click from Settings. You keep access until the end of the current billing period.",
-  },
-  {
-    q: "Is there a student discount?",
-    a: "Yes — GitHub Student Developer Pack gives you 12 months of Pro, and we run regular university-specific drops.",
-  },
-];
-
-const FAQ = () => {
-  const [open, setOpen] = useState(0);
-  const ref = useReveal();
-  return (
-    <section id="faq" className="bg-white py-20 sm:py-28">
-      <div className="mx-auto max-w-3xl px-5 sm:px-8">
-        <SectionHeading
-          title="Everything you were going to ask."
-        />
-        <div ref={ref} className="lp-reveal mt-10 space-y-2">
-          {FAQS.map((f, i) => {
-            const active = open === i;
-            return (
-              <div
-                key={f.q}
-                className={cn(
-                  "overflow-hidden rounded-xl border transition-colors duration-200",
-                  active
-                    ? "border-black bg-white shadow-[0_12px_30px_rgba(0,0,0,0.06)]"
-                    : "border-zinc-200 bg-white hover:border-zinc-400"
-                )}
-              >
-                <button
-                  data-testid={`faq-toggle-${i}`}
-                  onClick={() => setOpen(active ? -1 : i)}
-                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
-                  aria-expanded={active}
-                >
-                  <span className="text-[14.5px] font-semibold text-black">
-                    {f.q}
-                  </span>
-                  <span
-                    className={cn(
-                      "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-all duration-200",
-                      active
-                        ? "border-black bg-black text-white"
-                        : "border-zinc-300 text-zinc-600"
-                    )}
-                  >
-                    {active ? (
-                      <Minus className="h-[14px] w-[14px]" strokeWidth={2.5} />
-                    ) : (
-                      <Plus className="h-[14px] w-[14px]" strokeWidth={2.5} />
-                    )}
-                  </span>
-                </button>
-                <div
-                  className={cn(
-                    "grid transition-all duration-300 ease-out",
-                    active
-                      ? "grid-rows-[1fr] opacity-100"
-                      : "grid-rows-[0fr] opacity-0"
-                  )}
-                >
-                  <div className="min-h-0 overflow-hidden">
-                    <p className="px-5 pb-5 text-[13.5px] leading-relaxed text-zinc-600">
-                      {f.a}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-/* =====================================================================
  * FINAL CTA
  * ==================================================================== */
 const FinalCTA = () => {
   const navigate = useNavigate();
+  const t = useT();
   return (
     <section className="relative overflow-hidden bg-black py-20 text-white sm:py-28">
       <DarkGridBg />
@@ -1264,11 +1458,10 @@ const FinalCTA = () => {
           className="text-[38px] font-bold leading-[1.05] tracking-tight sm:text-[52px]"
           style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
         >
-          Ace the next one.
+          {t("cta.title")}
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-white/65">
-          Join 8,000+ students turning their notes into mastery. No card, no
-          setup, no pressure — just smarter studying.
+          {t("cta.sub")}
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <button
@@ -1277,7 +1470,7 @@ const FinalCTA = () => {
             className="group relative inline-flex h-12 items-center gap-2 overflow-hidden rounded-xl bg-white px-5 text-[14px] font-semibold text-black transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(255,255,255,0.28)] active:translate-y-0 active:scale-[0.99]"
           >
             <span className="lp-shine pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-black/[0.08] to-transparent" />
-            Get started — it's free
+            {t("cta.primary")}
             <ArrowRight className="h-[15px] w-[15px] transition-transform duration-200 group-hover:translate-x-0.5" />
           </button>
         </div>
@@ -1289,14 +1482,20 @@ const FinalCTA = () => {
 /* =====================================================================
  * FOOTER
  * ==================================================================== */
-const Footer = () => (
+const Footer = () => {
+  const t = useT();
+  const cols = [
+    { t: t("footer.productT"), l: t("footer.product") },
+    { t: t("footer.companyT"), l: t("footer.company") },
+    { t: t("footer.resourcesT"), l: t("footer.resources") },
+  ];
+  return (
   <footer className="border-t border-white/10 bg-black py-14 text-white/65">
     <div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-8 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
       <div>
         <WordMark onDark />
         <p className="mt-4 max-w-xs text-[12.5px] leading-relaxed">
-          Your personal AI study partner. Built for curious minds and clean
-          desks.
+          {t("footer.tag")}
         </p>
         <div className="mt-5 flex gap-2">
           {[Github, Twitter, Globe].map((Icon, i) => (
@@ -1311,17 +1510,7 @@ const Footer = () => (
         </div>
       </div>
 
-      {[
-        {
-          t: "Product",
-          l: ["Features", "How it works", "Changelog"],
-        },
-        { t: "Company", l: ["About", "Blog", "Careers", "Contact"] },
-        {
-          t: "Resources",
-          l: ["Help center", "Terms", "Privacy", "Status"],
-        },
-      ].map((col) => (
+      {cols.map((col) => (
         <div key={col.t}>
           <div className="mb-3 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-white/55">
             {col.t}
@@ -1343,26 +1532,44 @@ const Footer = () => (
     </div>
 
     <div className="mx-auto mt-12 flex max-w-7xl flex-col items-center justify-between gap-3 border-t border-white/10 px-5 pt-6 text-[11.5px] text-white/45 sm:px-8 md:flex-row">
-      <span>© {new Date().getFullYear()} Study·AI. All rights reserved.</span>
+      <span>© {new Date().getFullYear()} Study·AI. {t("footer.copyright")}</span>
       <span className="inline-flex items-center gap-4">
         <a href="#" className="transition hover:text-white">
-          Terms
+          {t("footer.terms")}
         </a>
         <a href="#" className="transition hover:text-white">
-          Privacy
+          {t("footer.privacy")}
         </a>
         <a href="#" className="transition hover:text-white">
-          Cookies
+          {t("footer.cookies")}
         </a>
       </span>
     </div>
   </footer>
-);
+  );
+};
 
 /* =====================================================================
  * ROOT
  * ==================================================================== */
 export default function LandingPage() {
+  // language state with localStorage persistence
+  const [lang, setLang] = useState(() => {
+    try {
+      const v = window.localStorage.getItem(LANG_STORAGE_KEY);
+      return v === "bn" ? "bn" : "en";
+    } catch {
+      return "en";
+    }
+  });
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(LANG_STORAGE_KEY, lang);
+    } catch {
+      /* ignore */
+    }
+  }, [lang]);
+
   // smooth anchor scroll with offset for fixed nav
   useEffect(() => {
     const onClick = (e) => {
@@ -1381,18 +1588,22 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div
-      data-testid="landing-page"
-      className="min-h-screen w-full overflow-x-hidden bg-white text-black antialiased"
-    >
-      <NavBar />
-      <Hero />
-      <FeaturesGrid />
-      <HowItWorks />
-      <Showcase />
-      <FAQ />
-      <FinalCTA />
-      <Footer />
-    </div>
+    <LangContext.Provider value={{ lang, setLang }}>
+      <div
+        data-testid="landing-page"
+        className={cn(
+          "min-h-screen w-full overflow-x-hidden bg-white text-black antialiased",
+          lang === "bn" && "lang-bn"
+        )}
+      >
+        <NavBar />
+        <Hero />
+        <FeaturesGrid />
+        <HowItWorks />
+        <Showcase />
+        <FinalCTA />
+        <Footer />
+      </div>
+    </LangContext.Provider>
   );
 }
