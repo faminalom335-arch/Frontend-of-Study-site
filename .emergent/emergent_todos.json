@@ -1,18 +1,22 @@
 [
   {
-    "content": "Remove Pricing section + nav link + Final CTA 'See pricing' button + footer link",
+    "content": "Replace typewriter with modern word-stagger blur-slide animation",
     "status": "completed"
   },
   {
-    "content": "Remove hero subtitle paragraph",
+    "content": "Remove 'Your Score A · 94%' floating chip from hero preview",
     "status": "completed"
   },
   {
-    "content": "Make hero min-h-screen (full viewport) with larger typography",
+    "content": "Build TiltCard wrapper (3D perspective + cursor-following glare)",
     "status": "completed"
   },
   {
-    "content": "Add black→white gradient blend between hero and Features section",
+    "content": "Apply TiltCard to hero preview, feature cards, step cards, testimonial cards",
+    "status": "completed"
+  },
+  {
+    "content": "Add CSS keyframes (lp-word-in, tilt transforms, glare)",
     "status": "completed"
   },
   {
