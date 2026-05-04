@@ -8,6 +8,9 @@ import {
   Sparkle,
   Infinity as InfinityIcon,
   Command,
+  Zap,
+  Lock,
+  RefreshCw,
 } from "lucide-react";
 
 /* ========================================================================
@@ -283,86 +286,143 @@ export default function LoginPage({ onAuthSuccess, onGoogle }) {
         </div>
 
         {/* center card */}
-        <div className="flex flex-1 items-center justify-center px-5 py-10 sm:px-8">
-          <div className="w-full max-w-[420px]">
-            {/* Heading */}
-            <div className="mb-8">
-              <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-700">
-                <Sparkle className="h-[11px] w-[11px]" />
-                Welcome
+        <div className="flex flex-1 items-center justify-center px-5 py-8 sm:px-8">
+          <div className="w-full max-w-[440px]">
+            {/* The card itself — gives visual weight against the white panel */}
+            <div className="relative overflow-hidden rounded-[22px] border border-zinc-200 bg-white p-7 shadow-[0_10px_40px_rgba(17,24,39,0.06)] sm:p-9">
+              {/* subtle top-edge highlight */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-zinc-300/80 to-transparent"
+              />
+
+              {/* Brand lockup icon */}
+              <div className="mb-6 flex items-center justify-center">
+                <div className="relative">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-black text-white shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
+                    <Sparkle className="h-6 w-6" strokeWidth={2.4} />
+                  </div>
+                  <span className="lp-ping-dot absolute -right-1 -top-1 h-3 w-3 rounded-full bg-black ring-[3px] ring-white" />
+                </div>
               </div>
-              <h2
-                className="text-[28px] font-bold leading-tight tracking-tight text-black sm:text-[32px]"
-                style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
+
+              {/* Heading */}
+              <div className="text-center">
+                <h2
+                  className="text-[26px] font-bold leading-tight tracking-tight text-black sm:text-[30px]"
+                  style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
+                >
+                  Welcome back
+                </h2>
+                <p className="mx-auto mt-2 max-w-[320px] text-[13.5px] leading-relaxed text-zinc-600">
+                  Sign in with Google to pick up exactly where you left off.
+                </p>
+              </div>
+
+              {/* Google button — PRIMARY, high-contrast black */}
+              <button
+                type="button"
+                data-testid="google-signin"
+                onClick={handleGoogle}
+                disabled={busy || done}
+                className={cn(
+                  "group relative mt-7 flex h-14 w-full items-center justify-center gap-3 overflow-hidden rounded-2xl text-[15px] font-semibold transition-all duration-200",
+                  done
+                    ? "bg-black text-white"
+                    : busy
+                    ? "cursor-progress bg-zinc-900 text-white"
+                    : "bg-black text-white hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(0,0,0,0.28)] active:translate-y-0 active:scale-[0.99]"
+                )}
               >
-                Sign in to continue.
-              </h2>
-              <p className="mt-2 text-[13.5px] leading-relaxed text-zinc-600">
-                Use your Google account to pick up where you left off — no
-                passwords to remember.
-              </p>
+                {/* shine sweep on idle */}
+                {!busy && !done && (
+                  <span className="lp-shine pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/[0.18] to-transparent" />
+                )}
+
+                {done ? (
+                  <span className="lp-pop inline-flex items-center gap-2.5">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-black">
+                      <Check className="h-[14px] w-[14px]" strokeWidth={3.5} />
+                    </span>
+                    Signed in successfully
+                  </span>
+                ) : busy ? (
+                  <>
+                    <Loader2 className="h-[17px] w-[17px] animate-spin" />
+                    Redirecting to Google…
+                  </>
+                ) : (
+                  <>
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-black transition-transform duration-500 group-hover:rotate-[360deg]">
+                      <GoogleGlyph className="h-[16px] w-[16px]" />
+                    </span>
+                    Continue with Google
+                    <ArrowRight className="h-[16px] w-[16px] shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" />
+                  </>
+                )}
+              </button>
+
+              {/* Divider */}
+              <div className="my-6 flex items-center gap-3">
+                <div className="h-px flex-1 bg-zinc-200" />
+                <span className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                  What you get
+                </span>
+                <div className="h-px flex-1 bg-zinc-200" />
+              </div>
+
+              {/* Benefit bullets — adds density & readability */}
+              <ul className="space-y-2.5">
+                {[
+                  {
+                    Icon: Zap,
+                    title: "One-click sign-in",
+                    body: "No passwords. No resets. Straight to studying.",
+                  },
+                  {
+                    Icon: RefreshCw,
+                    title: "Sync across devices",
+                    body: "Chats, quizzes, and scores — always up to date.",
+                  },
+                  {
+                    Icon: Lock,
+                    title: "Private by default",
+                    body: "OAuth 2.0 — we never see your Google password.",
+                  },
+                ].map(({ Icon, title, body }, i) => (
+                  <li
+                    key={title}
+                    className="lp-feature-in flex items-start gap-3 rounded-xl px-1"
+                    style={{ animationDelay: `${i * 90 + 160}ms` }}
+                  >
+                    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-black ring-1 ring-zinc-200">
+                      <Icon className="h-[14px] w-[14px]" strokeWidth={2.2} />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="text-[13px] font-semibold text-black">
+                        {title}
+                      </div>
+                      <div className="text-[12px] leading-snug text-zinc-600">
+                        {body}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
 
-            {/* Google button */}
-            <button
-              type="button"
-              data-testid="google-signin"
-              onClick={handleGoogle}
-              disabled={busy || done}
-              className={cn(
-                "group relative flex h-14 w-full items-center justify-center gap-3 overflow-hidden rounded-2xl text-[15px] font-semibold transition-all duration-200",
-                done
-                  ? "bg-black text-white"
-                  : busy
-                  ? "cursor-progress bg-zinc-900 text-white"
-                  : "border border-zinc-200 bg-white text-black hover:-translate-y-0.5 hover:border-black hover:shadow-[0_12px_30px_rgba(0,0,0,0.12)] active:translate-y-0 active:scale-[0.99]"
-              )}
-            >
-              {/* shine sweep on idle */}
-              {!busy && !done && (
-                <span className="lp-shine pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-black/[0.06] to-transparent" />
-              )}
-
-              {done ? (
-                <span className="lp-pop inline-flex items-center gap-2.5">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-black">
-                    <Check className="h-[14px] w-[14px]" strokeWidth={3.5} />
-                  </span>
-                  Signed in successfully
-                </span>
-              ) : busy ? (
-                <>
-                  <Loader2 className="h-[17px] w-[17px] animate-spin" />
-                  Redirecting to Google…
-                </>
-              ) : (
-                <>
-                  <span
-                    className={cn(
-                      "flex h-8 w-8 items-center justify-center rounded-full bg-black text-white transition-transform duration-300",
-                      "group-hover:rotate-[360deg]"
-                    )}
-                  >
-                    <GoogleGlyph className="h-[16px] w-[16px]" />
-                  </span>
-                  Continue with Google
-                  <ArrowRight className="h-[16px] w-[16px] transition-transform duration-200 group-hover:translate-x-0.5" />
-                </>
-              )}
-            </button>
-
-            {/* meta row */}
+            {/* Below-card trust row */}
             <div className="mt-5 flex items-center justify-center gap-4 text-[11.5px] text-zinc-500">
               <span className="inline-flex items-center gap-1.5">
                 <ShieldCheck className="h-[12px] w-[12px]" />
                 OAuth 2.0 · Encrypted
               </span>
               <span className="h-1 w-1 rounded-full bg-zinc-300" />
-              <span>One-click, no password</span>
+              <span>Free forever tier</span>
             </div>
 
             {/* Legal */}
-            <p className="mt-10 text-center text-[11.5px] leading-relaxed text-zinc-500">
+            <p className="mt-5 text-center text-[11.5px] leading-relaxed text-zinc-500">
               By continuing you agree to our{" "}
               <a
                 href="#terms"
@@ -379,10 +439,6 @@ export default function LoginPage({ onAuthSuccess, onGoogle }) {
               </a>
               .
             </p>
-
-            <p className="mt-3 text-center text-[12px] text-zinc-500">
-              More sign-in options coming soon.
-            </p>
           </div>
         </div>
 
@@ -392,7 +448,7 @@ export default function LoginPage({ onAuthSuccess, onGoogle }) {
             <ShieldCheck className="h-[11px] w-[11px]" /> Secure
           </span>
           <span className="h-1 w-1 rounded-full bg-zinc-300" />
-          <span>Free forever tier</span>
+          <span>More sign-in options coming soon</span>
         </div>
       </div>
     </div>
