@@ -1,22 +1,22 @@
 [
   {
-    "content": "Plan split-screen black/white login layout with smart interactions",
+    "content": "Plan landing sections: Nav, Hero (typewriter + product preview), Stats, Features, How-it-works, Product showcase, Testimonials, Pricing, FAQ, Final CTA, Footer",
     "status": "completed"
   },
   {
-    "content": "Create /app/frontend/src/components/LoginPage.jsx (self-contained, reusable)",
+    "content": "Create /app/frontend/src/components/LandingPage.jsx (self-contained)",
     "status": "completed"
   },
   {
-    "content": "Add CSS animations (shake, grid pulse, float, slide, strength bar) to App.css",
+    "content": "Add new landing-specific CSS animations to App.css (marquee, reveal-on-scroll, tilt)",
     "status": "completed"
   },
   {
-    "content": "Add /login route to App.js for live preview",
+    "content": "Restructure App.js routes: / → Landing, /app → StudyAssistant, /login → Login",
     "status": "completed"
   },
   {
-    "content": "Verify with esbuild + screenshot (desktop + mobile + error + signup + forgot)",
+    "content": "Verify with esbuild + screenshot (desktop + mobile full-scroll)",
     "status": "completed"
   }
 ]

@@ -227,6 +227,28 @@
 }
 .lp-feature-in { animation: lp-feature-in 380ms cubic-bezier(0.22, 0.85, 0.3, 1) both; }
 
+/* =========== Landing-page-only ============ */
+
+/* reveal-on-scroll: hidden by default, revealed when .lp-reveal-in added */
+.lp-reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 700ms ease-out, transform 700ms cubic-bezier(0.22, 0.85, 0.3, 1);
+  will-change: opacity, transform;
+}
+.lp-reveal-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* gentle vertical float for product-preview cards */
+@keyframes lp-float-y {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.lp-float-y  { animation: lp-float-y 5.5s ease-in-out infinite; }
+.lp-float-y2 { animation: lp-float-y 6.5s ease-in-out infinite reverse; }
+
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .lp-shake,
@@ -240,7 +262,14 @@
   .lp-fade,
   .lp-shine,
   .lp-ping-dot,
-  .lp-feature-in {
+  .lp-feature-in,
+  .lp-float-y,
+  .lp-float-y2 {
     animation: none !important;
+  }
+  .lp-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }
