@@ -1,38 +1,22 @@
 [
   {
-    "content": "Add `nanoGptApiKey` localStorage helpers + file→base64 util + fetch helpers",
+    "content": "Plan split-screen black/white login layout with smart interactions",
     "status": "completed"
   },
   {
-    "content": "Add 'API Key' tab in SettingsModal with masked input + save to localStorage",
+    "content": "Create /app/frontend/src/components/LoginPage.jsx (self-contained, reusable)",
     "status": "completed"
   },
   {
-    "content": "Wire API key state in root component + pass to SettingsModal",
+    "content": "Add CSS animations (shake, grid pulse, float, slide, strength bar) to App.css",
     "status": "completed"
   },
   {
-    "content": "Upgrade ChatComposer: add file upload button, attached-file chips, pass files in onSend",
+    "content": "Add /login route to App.js for live preview",
     "status": "completed"
   },
   {
-    "content": "Rewrite handleSend to POST /api/generate-quiz with {text, files, modelId, apiKey}; handle 401",
-    "status": "completed"
-  },
-  {
-    "content": "Render JSON quiz response nicely inside chat (inline mini-MCQ component)",
-    "status": "completed"
-  },
-  {
-    "content": "Wire MCQComposer to the same /api/generate-quiz endpoint (same contract)",
-    "status": "completed"
-  },
-  {
-    "content": "Fetch GET /api/history on mount and render in sidebar",
-    "status": "completed"
-  },
-  {
-    "content": "Verify with screenshot + esbuild compile check",
+    "content": "Verify with esbuild + screenshot (desktop + mobile + error + signup + forgot)",
     "status": "completed"
   }
 ]
