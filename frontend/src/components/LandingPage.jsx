@@ -158,7 +158,6 @@ const NavBar = () => {
   const links = [
     { label: "Features", href: "#features" },
     { label: "How it works", href: "#how" },
-    { label: "Pricing", href: "#pricing" },
     { label: "FAQ", href: "#faq" },
   ];
 
@@ -285,16 +284,16 @@ const Hero = () => {
   return (
     <section
       id="top"
-      className="relative overflow-hidden bg-black pb-24 pt-28 text-white sm:pb-32 sm:pt-32"
+      className="relative flex min-h-screen items-center overflow-hidden bg-black pb-24 pt-28 text-white sm:pb-32 sm:pt-32"
     >
       <DarkGridBg />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-8">
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-5 sm:px-8">
         <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1fr] lg:gap-10">
           {/* LEFT — copy */}
-          <div className="mx-auto max-w-[620px] text-center lg:mx-0 lg:text-left">
+          <div className="mx-auto max-w-[680px] text-center lg:mx-0 lg:text-left">
             <h1
-              className="text-[40px] font-bold leading-[1.02] tracking-tight sm:text-[56px] lg:text-[64px]"
+              className="text-[44px] font-bold leading-[1.02] tracking-tight sm:text-[64px] lg:text-[76px]"
               style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
             >
               <span className="block min-h-[1.12em]">
@@ -303,13 +302,7 @@ const Hero = () => {
               </span>
             </h1>
 
-            <p className="mx-auto mt-5 max-w-[520px] text-[15px] leading-relaxed text-white/65 sm:text-[16.5px] lg:mx-0">
-              Turn notes, PDFs, and images into razor-sharp quizzes. Chat with
-              the smartest models. Grade yourself like a real exam — all in
-              one beautifully simple place.
-            </p>
-
-            <div className="mt-7 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
               <button
                 data-testid="hero-primary-cta"
                 onClick={() => navigate("/login")}
@@ -334,6 +327,12 @@ const Hero = () => {
           <HeroPreview />
         </div>
       </div>
+
+      {/* soft black → white blend into the next section */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-40 bg-gradient-to-b from-transparent via-black/0 to-white"
+      />
     </section>
   );
 };
@@ -513,7 +512,7 @@ const FeaturesGrid = () => {
   return (
     <section
       id="features"
-      className="relative bg-white py-20 sm:py-28"
+      className="relative bg-white pb-20 pt-12 sm:pb-28 sm:pt-16"
     >
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHeading
@@ -968,148 +967,6 @@ const Testimonials = () => {
 };
 
 /* =====================================================================
- * PRICING
- * ==================================================================== */
-const PLANS = [
-  {
-    id: "free",
-    name: "Free",
-    price: "$0",
-    cadence: "forever",
-    tagline: "Perfect for casual study sessions.",
-    features: [
-      "Unlimited chat with free models",
-      "Up to 10 quizzes / day",
-      "Recall + Apply complexity levels",
-      "Local history + best-score memory",
-    ],
-    cta: "Start for free",
-    highlight: false,
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    price: "$9",
-    cadence: "/ month",
-    tagline: "For serious exam prep and daily learners.",
-    features: [
-      "All frontier models (Gemini, Claude, GPT, Kimi)",
-      "Unlimited quizzes, no daily caps",
-      "Analyze + Mastery complexity levels",
-      "Cloud sync across devices",
-      "Export graded papers as PDF",
-      "Priority response time",
-    ],
-    cta: "Go Pro",
-    highlight: true,
-  },
-];
-
-const Pricing = () => {
-  const navigate = useNavigate();
-  const ref = useReveal();
-  return (
-    <section id="pricing" className="bg-white py-20 sm:py-28">
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <SectionHeading
-          title="Simple. Honest. Cancel anytime."
-          sub="Start free forever. Upgrade only when you want the really clever models."
-        />
-
-        <div
-          ref={ref}
-          className="lp-reveal mx-auto mt-12 grid max-w-4xl gap-5 md:grid-cols-2"
-        >
-          {PLANS.map((p) => (
-            <div
-              key={p.id}
-              className={cn(
-                "relative overflow-hidden rounded-2xl border p-7 transition-all duration-300 hover:-translate-y-1",
-                p.highlight
-                  ? "border-black bg-black text-white shadow-[0_20px_50px_rgba(0,0,0,0.22)]"
-                  : "border-zinc-200 bg-white text-black hover:border-black hover:shadow-[0_18px_40px_rgba(0,0,0,0.08)]"
-              )}
-            >
-              {p.highlight && (
-                <div className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-[0.14em] text-black">
-                  <Sparkles className="h-[10px] w-[10px]" />
-                  Most popular
-                </div>
-              )}
-
-              <div className="mb-1 text-[12.5px] font-semibold uppercase tracking-[0.14em] opacity-70">
-                {p.name}
-              </div>
-              <div className="flex items-baseline gap-2">
-                <div
-                  className="text-[44px] font-bold leading-none tracking-tight"
-                  style={{ fontFamily: "'Manrope', sans-serif" }}
-                >
-                  {p.price}
-                </div>
-                <div
-                  className={cn(
-                    "text-[12.5px]",
-                    p.highlight ? "text-white/70" : "text-zinc-500"
-                  )}
-                >
-                  {p.cadence}
-                </div>
-              </div>
-              <p
-                className={cn(
-                  "mt-2 text-[13.5px]",
-                  p.highlight ? "text-white/70" : "text-zinc-600"
-                )}
-              >
-                {p.tagline}
-              </p>
-
-              <button
-                data-testid={`pricing-cta-${p.id}`}
-                onClick={() => navigate("/login")}
-                className={cn(
-                  "mt-6 flex h-11 w-full items-center justify-center gap-1.5 rounded-xl text-[13.5px] font-semibold transition-all duration-200 active:scale-[0.98]",
-                  p.highlight
-                    ? "bg-white text-black hover:bg-zinc-200"
-                    : "bg-black text-white hover:bg-zinc-900"
-                )}
-              >
-                {p.cta}
-                <ArrowRight className="h-[14px] w-[14px]" />
-              </button>
-
-              <ul className="mt-6 space-y-2.5">
-                {p.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-[13px]">
-                    <span
-                      className={cn(
-                        "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full",
-                        p.highlight ? "bg-white text-black" : "bg-black text-white"
-                      )}
-                    >
-                      <Check className="h-[10px] w-[10px]" strokeWidth={3} />
-                    </span>
-                    <span className={p.highlight ? "text-white/85" : "text-zinc-700"}>
-                      {f}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        <p className="mt-8 text-center text-[12px] text-zinc-500">
-          Built for students — GitHub Student Pack users get Pro free for 12
-          months.
-        </p>
-      </div>
-    </section>
-  );
-};
-
-/* =====================================================================
  * FAQ
  * ==================================================================== */
 const FAQS = [
@@ -1237,12 +1094,6 @@ const FinalCTA = () => {
             Get started — it's free
             <ArrowRight className="h-[15px] w-[15px] transition-transform duration-200 group-hover:translate-x-0.5" />
           </button>
-          <a
-            href="#pricing"
-            className="inline-flex h-12 items-center gap-2 rounded-xl border border-white/20 bg-white/[0.03] px-5 text-[14px] font-semibold text-white transition hover:border-white/40 hover:bg-white/[0.08]"
-          >
-            See pricing
-          </a>
         </div>
       </div>
     </section>
@@ -1277,7 +1128,7 @@ const Footer = () => (
       {[
         {
           t: "Product",
-          l: ["Features", "How it works", "Pricing", "Changelog"],
+          l: ["Features", "How it works", "Changelog"],
         },
         { t: "Company", l: ["About", "Blog", "Careers", "Contact"] },
         {
@@ -1354,7 +1205,6 @@ export default function LandingPage() {
       <HowItWorks />
       <Showcase />
       <Testimonials />
-      <Pricing />
       <FAQ />
       <FinalCTA />
       <Footer />

@@ -1,26 +1,18 @@
 [
   {
-    "content": "Remove eyebrow badges from all landing sections (Features, How it works, Loved by students, Pricing, FAQ, Final CTA, AI-native study, Chat, Quizzes)",
+    "content": "Remove Pricing section + nav link + Final CTA 'See pricing' button + footer link",
     "status": "completed"
   },
   {
-    "content": "Remove hero trust row (End-to-end encrypted / Free forever tier / Keyboard-first)",
+    "content": "Remove hero subtitle paragraph",
     "status": "completed"
   },
   {
-    "content": "Remove LogosBar section entirely",
+    "content": "Make hero min-h-screen (full viewport) with larger typography",
     "status": "completed"
   },
   {
-    "content": "Remove StatsBar section entirely (8k+, 120k, 4.9, 47s)",
-    "status": "completed"
-  },
-  {
-    "content": "Strip LoginPage brand panel: remove badge, stats grid, trust row",
-    "status": "completed"
-  },
-  {
-    "content": "Mobile: center alignment + auto-responsive polish",
+    "content": "Add black→white gradient blend between hero and Features section",
     "status": "completed"
   },
   {
