@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext, createContext } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Sparkle,
@@ -48,12 +48,10 @@ import {
 const cn = (...c) => c.filter(Boolean).join(" ");
 
 /* =====================================================================
- * i18n — English + Bangla
+ * Copy dictionary
  * ---------------------------------------------------------------------
- * Bangla translations are professionally copy-edited to feel native,
- * keeping industry-standard technical terms (e.g. "কুইজ", "মডেল") in
- * their established Bangla form. Typography switches to `Hind Siliguri`
- * via the `.lang-bn` CSS class on the landing root.
+ * All landing-page copy lives here so headlines and CTAs stay in
+ * sync across components. `useT()` is a tiny dot-path lookup helper.
  * ==================================================================== */
 const TRANSLATIONS = {
   en: {
@@ -199,233 +197,11 @@ const TRANSLATIONS = {
       privacy: "Privacy",
       cookies: "Cookies",
     },
-    lang: { label: "Language", en: "English", bn: "বাংলা" },
-  },
-  bn: {
-    nav: {
-      features: "ফিচারসমূহ",
-      how: "যেভাবে কাজ করে",
-      signin: "সাইন ইন",
-      cta: "শুরু করুন",
-    },
-    hero: {
-      taglines: [
-        "কৌশলী পড়াশোনা।",
-        "মিনিটেই নোট থেকে দক্ষতা অর্জন।",
-        "আপনার নিজস্ব এআই স্টাডি পার্টনার।",
-        "যেকোনো বিষয় তৎক্ষণাৎ কুইজে রূপান্তর করুন।",
-      ],
-      primary: "শুরু করুন — সম্পূর্ণ ফ্রি",
-      secondary: "কীভাবে কাজ করে দেখুন",
-    },
-    preview: {
-      userMsg: "সালোকসংশ্লেষণ নিয়ে কুইজ দাও — ৫টি প্রশ্ন, অ্যানালাইজ লেভেলে।",
-      assistantModel: "Gemini 3.1 Pro",
-      assistantText: "এই নিন ৫টি প্রশ্নের একটি কুইজ, ",
-      assistantBold: "অ্যানালাইজ",
-      assistantTail: " লেভেলে। শুভকামনা!",
-      typing: "পরবর্তী প্রশ্ন টাইপ করছেন...",
-      mcqQuestion:
-        "সালোকসংশ্লেষণের আলোক-নির্ভর বিক্রিয়ায় ATP কোথায় সংশ্লেষিত হয়?",
-      mcqOpts: ["Stroma", "Thylakoid membrane", "Outer envelope", "Cytosol"],
-    },
-    features: {
-      title: "শিক্ষার্থীরা আসলে যেভাবে পড়ে — সেভাবেই তৈরি।",
-      sub: "প্রতিটি বিষয় এমনভাবে সাজানো, যাতে আপনি আর পরবর্তী ধারণার মাঝের প্রতিটি বাধা দূর হয়।",
-      learnMore: "আরও জানুন",
-      items: [
-        {
-          title: "নোট → মুহূর্তেই কুইজ",
-          body: "পিডিএফ, ছবি বা টেক্সট দিন। আপনার উপকরণ অনুযায়ী নিখুঁত এমসিকিউ তৈরি হবে।",
-        },
-        {
-          title: "ব্লুমের স্তরে জটিলতা",
-          body: "রিকল, অ্যাপ্লাই, অ্যানালাইজ, মাস্টারি — পরীক্ষার সাথে মিলিয়ে কঠিনতা বেছে নিন।",
-        },
-        {
-          title: "সেরা সব এআই মডেল",
-          body: "Gemini, Claude, GPT ও Kimi — এক ক্লিকেই মডেল বদলান।",
-        },
-        {
-          title: "পরীক্ষার খাতার মতো মূল্যায়ন",
-          body: "ফলাফল আসে আসল পরীক্ষার খাতার মতো — লাল কলমের মন্তব্য আর A+ থেকে F গ্রেডসহ।",
-        },
-        {
-          title: "অগ্রগতির হিসাব",
-          body: "প্রতিটি রিট্রাইয়ে সেরা স্কোর মনে রাখা হয়। পরীক্ষা যত দেবেন, ততই ধারালো হবেন।",
-        },
-        {
-          title: "কিবোর্ড-প্রথম ওয়ার্কফ্লো",
-          body: "সবকিছু ⌘K-দ্রুত। চ্যাট, কুইজ, মডেল বদল — মাউস ছাড়াই।",
-        },
-      ],
-    },
-    how: {
-      title: "তিনটি ধাপ। কোনো ঝামেলা নেই।",
-      sub: "আপনার নোটের ছবি থেকে গ্রেডেড কুইজ — এক মিনিটেরও কম সময়ে।",
-      stepLabel: "ধাপ",
-      steps: [
-        {
-          title: "আপনার পড়ার উপকরণ দিন",
-          body: "নোট, লেকচার স্লাইড, পুরো অধ্যায়, এমনকি হোয়াইটবোর্ডের ছবি — আমরা সবই পড়তে পারি।",
-        },
-        {
-          title: "আপনার পছন্দ বেছে নিন",
-          body: "মডেল নির্বাচন করুন, জটিলতা ঠিক করুন, আর প্রশ্নের সংখ্যা নিজে দিন বা এআইকে বলুন।",
-        },
-        {
-          title: "পরীক্ষা দিন",
-          body: "কাগজের মতো ইন্টারফেসে উত্তর দিন। লাল কলমের ফিডব্যাক ও সেরা স্কোরের মেমরিসহ গ্রেড পান।",
-        },
-      ],
-    },
-    show1: {
-      title: "যে কাজের জন্য, সেই সেরা মডেলের সাথে কথা বলুন।",
-      body: "ছবির জন্য Gemini, লম্বা যুক্তির জন্য Claude, সূক্ষ্মতার জন্য GPT, বড় কনটেক্সটের জন্য Kimi। এক ক্লিকেই বদলান — নতুন অ্যাকাউন্ট লাগবে না, কপি-পেস্ট লাগবে না।",
-      bullets: [
-        "সরাসরি পিডিএফ বা ছবি যুক্ত করুন",
-        "পছন্দের কনভারসেশন রাখুন, বাকিগুলো মুছে দিন",
-        "এক কী-প্রেসেই কপি, রিজেনারেট বা থাম্বস-আপ",
-      ],
-      demoUser: "ব্যাকপ্রোপাগেশন সহজভাবে বুঝিয়ে দাও।",
-      demoModel: "Claude Sonnet 4.6",
-      demoBody:
-        "ভাবুন একটি গিটার কান দিয়ে টিউন করছেন। তার ধরলেন, বেসুরো শুনলেন, আর ঠিক করলেন। ব্যাকপ্রোপ ঠিক তাই করে — তার বাজায়, ভুল মাপে, আর ওজনগুলোকে উল্টো দিকে ঠেলে।",
-      thinking: "চিন্তা করছে",
-    },
-    show2: {
-      title: "আসল পরীক্ষার মতো মূল্যায়ন। হাতের লেখার অনুভূতি সহ।",
-      body: "অপশনগুলো কাগজের মতো কার্ডে দেখানো হয়। ভুল পছন্দে লাল ✗, সঠিকটিতে স্বয়ংক্রিয় ✓। ফাইনাল শিটে আসে গ্রেড আর লাল কলমের মন্তব্য। স্মৃতি আর স্পষ্টতার মিলন।",
-      bullets: [
-        "A+ থেকে F গ্রেড, সাথে মন্তব্য",
-        "প্রতিটি রিট্রাইয়ে সেরা স্কোর মনে রাখে",
-        "প্রশ্নভিত্তিক ব্যাখ্যা চাইলেই মিলবে",
-      ],
-    },
-    mcq: {
-      questions: [
-        {
-          q: "কোন ডেটা স্ট্রাকচারে LIFO পদ্ধতি ব্যবহৃত হয়?",
-          options: ["Queue", "Stack", "Tree", "Graph"],
-        },
-        {
-          q: "লিনিয়ার সার্চের সর্বোচ্চ সময়-জটিলতা কোনটি?",
-          options: ["O(1)", "O(log n)", "O(n)", "O(n²)"],
-        },
-        {
-          q: "কোন অ্যালগরিদমের গড় সময়-জটিলতা O(log n)?",
-          options: [
-            "Bubble sort",
-            "Binary search",
-            "Linear search",
-            "Depth-first search",
-          ],
-        },
-      ],
-      checking: "উত্তর যাচাই করা হচ্ছে…",
-      remark: "চমৎকার! ৩/৩ ✓",
-      gradedIn: "— ০.৮ সেকেন্ডে গ্রেডেড",
-    },
-    cta: {
-      title: "পরবর্তী পরীক্ষায় বাজিমাত।",
-      sub: "৮,০০০+ শিক্ষার্থীর সাথে যোগ দিন — যারা নোট থেকে দক্ষতা তৈরি করছে। কার্ড লাগবে না, সেটআপ লাগবে না — শুধু আরও বুদ্ধিমত্তার সাথে পড়াশোনা।",
-      primary: "শুরু করুন — সম্পূর্ণ ফ্রি",
-    },
-    footer: {
-      tag: "আপনার নিজস্ব এআই স্টাডি পার্টনার। কৌতূহলী মন আর পরিপাটি ডেস্কের জন্য তৈরি।",
-      productT: "প্রোডাক্ট",
-      companyT: "কোম্পানি",
-      resourcesT: "রিসোর্স",
-      product: ["ফিচারসমূহ", "যেভাবে কাজ করে", "চেঞ্জলগ"],
-      company: ["আমাদের সম্পর্কে", "ব্লগ", "ক্যারিয়ার", "যোগাযোগ"],
-      resources: ["হেল্প সেন্টার", "শর্তাবলী", "গোপনীয়তা", "স্ট্যাটাস"],
-      copyright: "সর্বস্বত্ব সংরক্ষিত।",
-      terms: "শর্তাবলী",
-      privacy: "গোপনীয়তা",
-      cookies: "কুকিজ",
-    },
-    lang: { label: "ভাষা", en: "English", bn: "বাংলা" },
   },
 };
 
-const LANG_STORAGE_KEY = "landing:lang";
-const LangContext = createContext({ lang: "en", setLang: () => {} });
-const useLang = () => useContext(LangContext);
-const useT = () => {
-  const { lang } = useLang();
-  return (path) =>
-    path.split(".").reduce((o, k) => (o == null ? o : o[k]), TRANSLATIONS[lang]);
-};
-
-/* ---------- Language switcher (segmented pill) ---------- */
-const LanguageSwitcher = ({ compact = false }) => {
-  const { lang, setLang } = useLang();
-  const opts = [
-    { id: "en", label: "EN", aria: "English" },
-    { id: "bn", label: "বাং", aria: "বাংলা" },
-  ];
-  return (
-    <div
-      data-testid="lang-switcher"
-      role="group"
-      aria-label="Language"
-      className={cn(
-        "group/lang relative inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] pl-2 pr-[3px] py-[3px] backdrop-blur-xl",
-        "shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.35)]",
-        "transition-colors duration-200 hover:border-white/20 hover:bg-white/[0.06]",
-        compact && "pl-1.5 pr-[2px] py-[2px] gap-0.5"
-      )}
-    >
-      {/* Globe anchor */}
-      <span
-        aria-hidden
-        className={cn(
-          "flex items-center text-white/45 transition-colors duration-200 group-hover/lang:text-white/70",
-          compact && "scale-90"
-        )}
-      >
-        <Globe className="h-[12px] w-[12px]" strokeWidth={2.2} />
-      </span>
-
-      {/* Segmented track */}
-      <div className="relative flex items-center">
-        {/* Sliding indicator — two equal halves, no magic numbers */}
-        <div
-          aria-hidden
-          className={cn(
-            "pointer-events-none absolute inset-y-0 left-0 w-1/2 rounded-full bg-white",
-            "shadow-[0_1px_2px_rgba(0,0,0,0.25),0_0_0_1px_rgba(0,0,0,0.04)]",
-            "transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform",
-            lang === "bn" ? "translate-x-full" : "translate-x-0"
-          )}
-        />
-        {opts.map((o) => {
-          const active = o.id === lang;
-          return (
-            <button
-              key={o.id}
-              data-testid={`lang-${o.id}`}
-              onClick={() => setLang(o.id)}
-              type="button"
-              aria-pressed={active}
-              aria-label={o.aria}
-              className={cn(
-                "relative z-10 inline-flex min-w-[40px] items-center justify-center rounded-full px-2.5 py-[5px]",
-                "text-[11px] font-semibold leading-none tracking-[0.04em]",
-                "transition-colors duration-200 ease-out",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-0",
-                active ? "text-black" : "text-white/55 hover:text-white/85",
-                compact && "min-w-[36px] px-2 py-1 text-[10.5px]"
-              )}
-            >
-              {o.label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
+const useT = () => (path) =>
+  path.split(".").reduce((o, k) => (o == null ? o : o[k]), TRANSLATIONS.en);
 
 /* ---------------- shared bits ---------------- */
 const WordMark = ({ onDark = true, size = "md" }) => {
@@ -568,7 +344,6 @@ const NavBar = () => {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <LanguageSwitcher />
           <button
             data-testid="nav-signin"
             onClick={() => navigate("/login")}
@@ -588,7 +363,6 @@ const NavBar = () => {
 
         {/* mobile */}
         <div className="flex items-center gap-2 md:hidden">
-          <LanguageSwitcher compact />
           <button
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Menu"
@@ -635,7 +409,6 @@ const NavBar = () => {
 const Hero = () => {
   const navigate = useNavigate();
   const t = useT();
-  const { lang } = useLang();
   const taglines = t("hero.taglines");
   const [idx, setIdx] = useState(0);
 
@@ -646,11 +419,6 @@ const Hero = () => {
     const t2 = setTimeout(() => setIdx((i) => (i + 1) % n), 3800);
     return () => clearTimeout(t2);
   }, [idx, taglines]);
-
-  // Reset idx when language changes so we start fresh
-  useEffect(() => {
-    setIdx(0);
-  }, [lang]);
 
   const words = (taglines[idx] || "").split(" ");
 
@@ -1577,23 +1345,6 @@ const Footer = () => {
  * ROOT
  * ==================================================================== */
 export default function LandingPage() {
-  // language state with localStorage persistence
-  const [lang, setLang] = useState(() => {
-    try {
-      const v = window.localStorage.getItem(LANG_STORAGE_KEY);
-      return v === "bn" ? "bn" : "en";
-    } catch {
-      return "en";
-    }
-  });
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(LANG_STORAGE_KEY, lang);
-    } catch {
-      /* ignore */
-    }
-  }, [lang]);
-
   // smooth anchor scroll with offset for fixed nav
   useEffect(() => {
     const onClick = (e) => {
@@ -1612,22 +1363,17 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <LangContext.Provider value={{ lang, setLang }}>
-      <div
-        data-testid="landing-page"
-        className={cn(
-          "min-h-screen w-full overflow-x-hidden bg-white text-black antialiased",
-          lang === "bn" && "lang-bn"
-        )}
-      >
-        <NavBar />
-        <Hero />
-        <FeaturesGrid />
-        <HowItWorks />
-        <Showcase />
-        <FinalCTA />
-        <Footer />
-      </div>
-    </LangContext.Provider>
+    <div
+      data-testid="landing-page"
+      className="min-h-screen w-full overflow-x-hidden bg-white text-black antialiased"
+    >
+      <NavBar />
+      <Hero />
+      <FeaturesGrid />
+      <HowItWorks />
+      <Showcase />
+      <FinalCTA />
+      <Footer />
+    </div>
   );
 }

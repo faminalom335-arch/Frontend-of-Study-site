@@ -229,26 +229,6 @@
 
 /* =========== Landing-page-only ============ */
 
-/* Language (bn) — swap display font to Hind Siliguri when active.
-   Hind Siliguri has excellent Bengali + passable Latin glyphs, so the
-   whole page becomes cohesive in Bangla mode. */
-.lang-bn,
-.lang-bn * {
-  font-family: 'Hind Siliguri', 'Manrope', system-ui, sans-serif !important;
-}
-/* Keep display headings using Hind Siliguri's heavier weights already */
-.lang-bn h1, .lang-bn h2, .lang-bn h3, .lang-bn h4, .lang-bn .font-display {
-  font-family: 'Hind Siliguri', 'Manrope', system-ui, sans-serif !important;
-}
-/* Keep the paper-MCQ handwritten cursive intact — it's visual flair, not
-   body text. Latin-only font gracefully falls back to Hind Siliguri for
-   Bengali glyphs. */
-.lang-bn [data-testid="animated-mcq-paper"] [style*="Edu VIC"],
-.lang-bn .lp-remark-in,
-.lang-bn .lp-stamp-in {
-  /* respect the inline cursive font — Bangla falls back automatically */
-}
-
 /* reveal-on-scroll: hidden by default, revealed when .lp-reveal-in added */
 .lp-reveal {
   opacity: 0;
