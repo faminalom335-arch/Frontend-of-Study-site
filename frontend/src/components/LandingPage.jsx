@@ -352,14 +352,6 @@ const NavBar = () => {
           >
             {t("nav.signin")}
           </button>
-          <button
-            data-testid="nav-cta"
-            onClick={() => navigate("/login")}
-            className="group inline-flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-1.5 text-[13px] font-semibold text-black transition hover:bg-zinc-200 active:scale-[0.98]"
-          >
-            {t("nav.cta")}
-            <ArrowRight className="h-[14px] w-[14px] transition-transform duration-200 group-hover:translate-x-0.5" />
-          </button>
         </div>
       </div>
     </header>
