@@ -45,31 +45,44 @@ const GoogleGlyph = ({ className = "h-[18px] w-[18px]" }) => (
   </svg>
 );
 
+/* Quasar AI brand logo — vector. Uses currentColor so it adapts to
+   surrounding text color. */
+const QuasarLogo = ({ className = "", strokeWidth = 3.8 }) => (
+  <svg
+    viewBox="0 0 64 64"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    aria-hidden="true"
+  >
+    <circle cx="27" cy="30" r="20" stroke="currentColor" strokeWidth={strokeWidth} />
+    <path
+      d="M27 13.5 C27 23.5 28 26 36 30 C28 34 27 36.5 27 46.5 C27 36.5 26 34 18 30 C26 26 27 23.5 27 13.5 Z"
+      fill="currentColor"
+    />
+    <path
+      d="M36.5 39 L52 54.5"
+      stroke="currentColor"
+      strokeWidth={strokeWidth + 0.6}
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
 /* ---------------- Wordmark ---------------- */
 const WordMark = ({ onDark = true, className = "" }) => (
-  <div className={cn("inline-flex items-center gap-2", className)}>
-    <div
-      className={cn(
-        "relative flex h-8 w-8 items-center justify-center rounded-lg",
-        onDark ? "bg-white text-black" : "bg-black text-white"
-      )}
-    >
-      <Sparkle className="h-4 w-4" strokeWidth={2.4} />
-      <span
-        className={cn(
-          "absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full ring-2",
-          onDark ? "bg-white ring-black" : "bg-black ring-white"
-        )}
-      />
-    </div>
+  <div className={cn("inline-flex items-center gap-2.5", className)}>
+    <QuasarLogo
+      className={cn("h-7 w-7", onDark ? "text-white" : "text-black")}
+    />
     <span
       className={cn(
-        "text-[15px] font-semibold tracking-[0.18em]",
+        "text-[16px] font-semibold tracking-[-0.005em]",
         onDark ? "text-white" : "text-black"
       )}
       style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
     >
-      STUDY·AI
+      Quasar AI
     </span>
   </div>
 );

@@ -2042,7 +2042,7 @@ const QuizResult = ({ correct, total, onRetry, onClose, title }) => {
                 display: "inline-block",
               }}
             >
-              — Study AI
+              — Quasar AI
             </span>
           </div>
         </div>
@@ -2316,7 +2316,7 @@ const MCQComposer = ({ onSubmitText, onUpload, sendOnEnter }) => {  const [text,
         </div>
       </div>
       <p className="mt-3 text-center text-[11px] text-zinc-500">
-        Study AI can make mistakes. Verify important information.
+        Quasar AI can make mistakes. Verify important information.
       </p>
     </div>
   );

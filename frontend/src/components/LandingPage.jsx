@@ -204,34 +204,53 @@ const useT = () => (path) =>
   path.split(".").reduce((o, k) => (o == null ? o : o[k]), TRANSLATIONS.en);
 
 /* ---------------- shared bits ---------------- */
+/* Quasar AI brand logo — vector. Uses currentColor so it adapts to
+   surrounding text color. Closely matches the official wordmark. */
+const QuasarLogo = ({ className = "", strokeWidth = 3.5 }) => (
+  <svg
+    viewBox="0 0 64 64"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    aria-hidden="true"
+  >
+    {/* Open Q ring */}
+    <circle cx="27" cy="30" r="20" stroke="currentColor" strokeWidth={strokeWidth} />
+    {/* 4-point sparkle (concave-sided diamond) */}
+    <path
+      d="M27 13.5 C27 23.5 28 26 36 30 C28 34 27 36.5 27 46.5 C27 36.5 26 34 18 30 C26 26 27 23.5 27 13.5 Z"
+      fill="currentColor"
+    />
+    {/* Q tail */}
+    <path
+      d="M36.5 39 L52 54.5"
+      stroke="currentColor"
+      strokeWidth={strokeWidth + 0.6}
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
 const WordMark = ({ onDark = true, size = "md" }) => {
   const big = size === "lg";
   return (
-    <div className="inline-flex items-center gap-2">
-      <div
+    <div className="inline-flex items-center gap-2.5">
+      <QuasarLogo
         className={cn(
-          "relative flex items-center justify-center rounded-lg",
-          big ? "h-9 w-9" : "h-8 w-8",
-          onDark ? "bg-white text-black" : "bg-black text-white"
+          big ? "h-8 w-8" : "h-7 w-7",
+          onDark ? "text-white" : "text-black"
         )}
-      >
-        <Sparkle className={big ? "h-[18px] w-[18px]" : "h-4 w-4"} strokeWidth={2.4} />
-        <span
-          className={cn(
-            "absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full ring-2",
-            onDark ? "bg-white ring-black" : "bg-black ring-white"
-          )}
-        />
-      </div>
+        strokeWidth={big ? 3.6 : 3.8}
+      />
       <span
         className={cn(
-          "font-semibold tracking-[0.18em]",
-          big ? "text-[16px]" : "text-[14.5px]",
+          "font-semibold tracking-[-0.005em]",
+          big ? "text-[18px]" : "text-[16px]",
           onDark ? "text-white" : "text-black"
         )}
         style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
       >
-        STUDY·AI
+        Quasar AI
       </span>
     </div>
   );
@@ -303,7 +322,6 @@ const NavBar = () => {
   const navigate = useNavigate();
   const t = useT();
   const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -311,11 +329,6 @@ const NavBar = () => {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  const links = [
-    { label: t("nav.features"), href: "#features" },
-    { label: t("nav.how"), href: "#how" },
-  ];
 
   return (
     <header
@@ -331,19 +344,7 @@ const NavBar = () => {
           <WordMark onDark />
         </a>
 
-        <nav className="hidden items-center gap-1 md:flex">
-          {links.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className="rounded-md px-3 py-1.5 text-[13px] font-medium text-white/75 transition hover:bg-white/5 hover:text-white"
-            >
-              {l.label}
-            </a>
-          ))}
-        </nav>
-
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <button
             data-testid="nav-signin"
             onClick={() => navigate("/login")}
@@ -360,45 +361,7 @@ const NavBar = () => {
             <ArrowRight className="h-[14px] w-[14px] transition-transform duration-200 group-hover:translate-x-0.5" />
           </button>
         </div>
-
-        {/* mobile */}
-        <div className="flex items-center gap-2 md:hidden">
-          <button
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label="Menu"
-            className="flex h-9 w-9 items-center justify-center rounded-md text-white/80"
-          >
-            {menuOpen ? <XIcon className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </div>
       </div>
-
-      {/* mobile drawer */}
-      {menuOpen && (
-        <div className="border-t border-white/10 bg-black/95 md:hidden">
-          <div className="mx-auto flex max-w-7xl flex-col gap-1 px-5 py-3">
-            {links.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                onClick={() => setMenuOpen(false)}
-                className="rounded-md px-3 py-2 text-[14px] font-medium text-white/80 hover:bg-white/5 hover:text-white"
-              >
-                {l.label}
-              </a>
-            ))}
-            <button
-              onClick={() => {
-                setMenuOpen(false);
-                navigate("/login");
-              }}
-              className="mt-2 rounded-lg bg-white px-3 py-2 text-[14px] font-semibold text-black"
-            >
-              {t("nav.cta")}
-            </button>
-          </div>
-        </div>
-      )}
     </header>
   );
 };
