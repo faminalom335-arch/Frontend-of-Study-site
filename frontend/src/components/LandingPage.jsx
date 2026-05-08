@@ -1238,59 +1238,65 @@ const Footer = () => {
   ];
   return (
   <footer className="border-t border-white/10 bg-black py-14 text-white/65">
-    <div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-8 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
-      <div>
-        <WordMark onDark />
-        <p className="mt-4 max-w-xs text-[12.5px] leading-relaxed">
-          {t("footer.tag")}
-        </p>
-        <div className="mt-5 flex gap-2">
-          {[Github, Twitter, Globe].map((Icon, i) => (
-            <a
-              key={i}
-              href="#"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 text-white/70 transition hover:border-white/30 hover:text-white"
-            >
-              <Icon className="h-4 w-4" />
-            </a>
+    <div className="mx-auto max-w-7xl px-5 sm:px-8">
+      <div className="grid gap-10 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
+        <div>
+          <WordMark onDark />
+          <p className="mt-4 max-w-xs text-[12.5px] leading-relaxed">
+            {t("footer.tag")}
+          </p>
+          <div className="mt-5 flex gap-2">
+            {[Github, Twitter, Globe].map((Icon, i) => (
+              <a
+                key={i}
+                href="#"
+                aria-label="Social link"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 text-white/70 transition hover:border-white/30 hover:text-white"
+              >
+                <Icon className="h-4 w-4" />
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {/* Link columns — 3 side-by-side on mobile, become individual cols at md */}
+        <div className="grid grid-cols-3 gap-6 md:contents">
+          {cols.map((col) => (
+            <div key={col.t}>
+              <div className="mb-3 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-white/55">
+                {col.t}
+              </div>
+              <ul className="space-y-2">
+                {col.l.map((i) => (
+                  <li key={i}>
+                    <a
+                      href="#"
+                      className="text-[13px] text-white/70 transition hover:text-white"
+                    >
+                      {i}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
         </div>
       </div>
 
-      {cols.map((col) => (
-        <div key={col.t}>
-          <div className="mb-3 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-white/55">
-            {col.t}
-          </div>
-          <ul className="space-y-2">
-            {col.l.map((i) => (
-              <li key={i}>
-                <a
-                  href="#"
-                  className="text-[13px] text-white/70 transition hover:text-white"
-                >
-                  {i}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
-    </div>
-
-    <div className="mx-auto mt-12 flex max-w-7xl flex-col items-center justify-between gap-3 border-t border-white/10 px-5 pt-6 text-[11.5px] text-white/45 sm:px-8 md:flex-row">
-      <span>© {new Date().getFullYear()} Study·AI. {t("footer.copyright")}</span>
-      <span className="inline-flex items-center gap-4">
-        <a href="#" className="transition hover:text-white">
-          {t("footer.terms")}
-        </a>
-        <a href="#" className="transition hover:text-white">
-          {t("footer.privacy")}
-        </a>
-        <a href="#" className="transition hover:text-white">
-          {t("footer.cookies")}
-        </a>
-      </span>
+      <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-[11.5px] text-white/45 md:flex-row">
+        <span className="text-center md:text-left">© {new Date().getFullYear()} Quasar AI. {t("footer.copyright")}</span>
+        <span className="inline-flex items-center gap-4">
+          <a href="#" className="transition hover:text-white">
+            {t("footer.terms")}
+          </a>
+          <a href="#" className="transition hover:text-white">
+            {t("footer.privacy")}
+          </a>
+          <a href="#" className="transition hover:text-white">
+            {t("footer.cookies")}
+          </a>
+        </span>
+      </div>
     </div>
   </footer>
   );

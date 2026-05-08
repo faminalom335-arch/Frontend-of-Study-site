@@ -383,13 +383,13 @@ export default function LoginPage({ onAuthSuccess, onGoogle }) {
             </div>
 
             {/* Below-card trust row */}
-            <div className="mt-5 flex items-center justify-center gap-4 text-[11.5px] text-zinc-500">
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11.5px] text-zinc-500">
               <span className="inline-flex items-center gap-1.5">
                 <ShieldCheck className="h-[12px] w-[12px]" />
                 OAuth 2.0 · Encrypted
               </span>
-              <span className="h-1 w-1 rounded-full bg-zinc-300" />
-              <span>Free forever tier</span>
+              <span className="hidden h-1 w-1 rounded-full bg-zinc-300 sm:inline-block" />
+              <span className="whitespace-nowrap">Free forever tier</span>
             </div>
 
             {/* Legal */}
@@ -414,12 +414,12 @@ export default function LoginPage({ onAuthSuccess, onGoogle }) {
         </div>
 
         {/* Mobile footer */}
-        <div className="flex items-center justify-center gap-4 px-5 pb-6 text-[11px] text-zinc-500 sm:px-8 md:hidden">
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-5 pb-20 pt-2 text-center text-[11px] text-zinc-500 sm:px-8 md:hidden">
           <span className="inline-flex items-center gap-1">
             <ShieldCheck className="h-[11px] w-[11px]" /> Secure
           </span>
-          <span className="h-1 w-1 rounded-full bg-zinc-300" />
-          <span>More sign-in options coming soon</span>
+          <span className="hidden h-1 w-1 rounded-full bg-zinc-300 xs:inline-block" />
+          <span className="whitespace-nowrap">More options coming soon</span>
         </div>
       </div>
     </div>

@@ -2265,7 +2265,7 @@ const MCQComposer = ({ onSubmitText, onUpload, sendOnEnter }) => {  const [text,
             value={text}
             onChange={handleInput}
             onKeyDown={handleKey}
-            placeholder="Paste text or upload a file to generate MCQs..."
+            placeholder="Paste notes or upload a file"
             className="block max-h-[220px] w-full resize-none bg-transparent px-4 pt-3 pb-2 text-[15px] leading-relaxed text-black placeholder:text-zinc-400 outline-none"
           />
 
@@ -2441,7 +2441,7 @@ const ChatComposer = ({ onSend, model, onModelChange, sendOnEnter, disabled }) =
             value={text}
             onChange={handleInput}
             onKeyDown={handleKey}
-            placeholder="Ask anything — attach an image or PDF to include context..."
+            placeholder="Message Quasar AI"
             className="block max-h-[220px] w-full resize-none bg-transparent px-4 pt-3 pb-2 text-[15px] leading-relaxed text-black placeholder:text-zinc-400 outline-none"
           />
 
